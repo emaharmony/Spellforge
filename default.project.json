@@ -4,40 +4,21 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "$properties": { "Archivable": false },
-      "Config": { "$path": "ReplicatedStorage/Config.luau" },
-      "FragmentData": { "$path": "ReplicatedStorage/FragmentData.luau" },
-      "ElementData": { "$path": "ReplicatedStorage/ElementData.luau" },
-      "EnemyData": { "$path": "ReplicatedStorage/EnemyData.luau" },
-      "Remotes": { "$path": "ReplicatedStorage/Remotes.luau" }
+      "$path": "src/ReplicatedStorage"
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "$properties": { "Archivable": false },
-      "GameInit": { "$path": "ServerScriptService/GameInit.server.luau" },
-      "WaveSystem": { "$path": "ServerScriptService/WaveSystem.luau" },
-      "CombatEngine": { "$path": "ServerScriptService/CombatEngine.luau" },
-      "EnemySpawner": { "$path": "ServerScriptService/EnemySpawner.luau" },
-      "SpellAssembler": { "$path": "ServerScriptService/SpellAssembler.luau" },
-      "FragmentInventory": { "$path": "ServerScriptService/FragmentInventory.luau" },
-      "FragmentDropper": { "$path": "ServerScriptService/FragmentDropper.luau" },
-      "CrystalManager": { "$path": "ServerScriptService/CrystalManager.luau" },
-      "DataManager": { "$path": "ServerScriptService/DataManager.luau" },
-      "CoopManager": { "$path": "ServerScriptService/CoopManager.luau" }
+      "$path": "src/ServerScriptService"
     },
     "StarterGui": {
       "$className": "StarterGui",
-      "$properties": { "Archivable": false },
-      "SpellforgeUI": { "$path": "StarterGui/SpellforgeUI.client.luau" },
-      "DefenseHUD": { "$path": "StarterGui/DefenseHUD.client.luau" }
+      "$path": "src/StarterGui"
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "FragmentScreen": { "$path": "StarterPlayer/StarterPlayerScripts/FragmentScreen.client.luau" },
-        "WizardController": { "$path": "StarterPlayer/StarterPlayerScripts/WizardController.client.luau" },
-        "CoopLobby": { "$path": "StarterPlayer/StarterPlayerScripts/CoopLobby.client.luau" }
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
       }
     },
     "Workspace": {
