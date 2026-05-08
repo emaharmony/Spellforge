@@ -2,12 +2,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = {}
+local REMOTE_FOLDER_NAME = "SpellforgeRemotes"
 
 -- Create RemoteEvents
 local function ensureRemote(name: string, className: string): Instance
-    local container = ReplicatedStorage:FindFirstChild("Remotes")
+    local container = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
         or Instance.new("Folder")
-    container.Name = "Remotes"
+    container.Name = REMOTE_FOLDER_NAME
     container.Parent = ReplicatedStorage
 
     local remote = container:FindFirstChild(name)

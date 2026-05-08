@@ -42,6 +42,8 @@ function SpellAssembler.assemble(fragmentIds: { string }): any?
     local element = fragments.element
     local power = fragments.power
     local modifier = fragments.modifier
+    local shapeId = shape.id:match("_shape_(.+)$")
+    local shapeStats = shapeId and FragmentData.Shapes[shapeId] or nil
 
     -- Compute spell stats
     local rarityMult = Config.RARITY_MULTIPLIERS[power.rarity] or 1.0
@@ -50,8 +52,8 @@ function SpellAssembler.assemble(fragmentIds: { string }): any?
         fragments = fragments,
         computed = {
             damage = Config.SPELL_BASE_DAMAGE * (power.properties.multiplier or 1.0) * rarityMult,
-            range = Config.SPELL_BASE_RANGE * (FragmentData.Shapes[shape.id:match("_(.+)$")] or {}).range or 1.0,
-            cooldown = Config.SPELL_BASE_COOLDOWN * (FragmentData.Shapes[shape.id:match("_(.+)$")] or {}).cooldown or 1.0,
+            range = Config.SPELL_BASE_RANGE * ((shapeStats and shapeStats.range) or 1.0),
+            cooldown = Config.SPELL_BASE_COOLDOWN * ((shapeStats and shapeStats.cooldown) or 1.0),
             targeting = shape.properties.targeting,
             damageType = element.properties.damageType or "pure",
             effect = if modifier.properties.effect ~= nil then modifier.properties.effect else nil,

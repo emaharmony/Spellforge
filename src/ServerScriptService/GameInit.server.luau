@@ -1,4 +1,6 @@
 -- GameInit.server.luau — Entry point: wires all systems, auto-starts defense with hardcoded fire-bolt spell
+print("[Spellforge] GameInit starting...")
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

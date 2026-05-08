@@ -117,40 +117,43 @@ function EnemySpawner:spawnWave(waveNumber: number, targetPosition: Vector3): { 
     -- Mix enemy types based on wave
     local types = EnemyData.GetAll()
 
-    for i = 1, count do
-        local enemyType
+    local function pickEnemyType(): string
         if waveNumber <= 2 then
-            -- Early waves: mostly walkers
-            enemyType = math.random() < 0.7 and "walker" or "runner"
+            return math.random() < 0.7 and "walker" or "runner"
         elseif waveNumber <= 4 then
-            -- Mid waves: mix of all
             local roll = math.random()
             if roll < 0.4 then
-                enemyType = "walker"
+                return "walker"
             elseif roll < 0.75 then
-                enemyType = "runner"
+                return "runner"
             else
-                enemyType = "tank"
-            end
-        else
-            -- Late waves: harder mix
-            local roll = math.random()
-            if roll < 0.3 then
-                enemyType = "walker"
-            elseif roll < 0.6 then
-                enemyType = "runner"
-            else
-                enemyType = "tank"
+                return "tank"
             end
         end
 
-        -- Stagger spawns
-        task.delay(i * 0.5, function()
+        local roll = math.random()
+        if roll < 0.3 then
+            return "walker"
+        elseif roll < 0.6 then
+            return "runner"
+        end
+        return "tank"
+    end
+
+    for i = 1, count do
+        local enemyType = pickEnemyType()
+        local function spawn()
             local enemy = self:spawnEnemy(enemyType, targetPosition)
             if enemy then
                 table.insert(enemies, enemy)
             end
-        end)
+        end
+
+        if i == 1 then
+            spawn()
+        else
+            task.delay((i - 1) * 0.5, spawn)
+        end
     end
 
     return enemies
