@@ -128,6 +128,28 @@ local function startEnemyAttackLoop()
 	end)
 end
 
+-- M1 wizard auto-attack loop — the missing piece of the game loop.
+-- Nothing called CombatEngine:castSpell, so enemies were unkillable and
+-- waves could never complete. Each wizard periodically auto-targets the
+-- nearest enemy in spell range and casts. Manual casting is M2.
+local function startWizardAttackLoop()
+	task.spawn(function()
+		while waveSystem:isGameActive() do
+			for _, player in Players:GetPlayers() do
+				local playerData = waveSystem.players[player.UserId]
+				local spell = playerData and playerData.spell
+				if spell and player.Character and (player:GetAttribute("HP") or 0) > 0 then
+					local targets = combatEngine:autoTarget(player, spell, enemySpawner:getAliveEnemies())
+					if #targets > 0 then
+						combatEngine:castSpell(player, spell, targets)
+					end
+				end
+			end
+			task.wait(0.25) -- fine tick; castSpell enforces per-player cooldowns
+		end
+	end)
+end
+
 -- Boss special attack loop
 local function startBossAttackLoop()
 	task.spawn(function()
@@ -246,6 +268,7 @@ task.delay(5, function()
 	print("[Spellforge v2] Auto-starting defense!")
 	waveSystem:start()
 	startEnemyAttackLoop()
+	startWizardAttackLoop()
 	startBossAttackLoop()
 	dataManager:startAutoSave()
 end)

@@ -72,24 +72,60 @@ function EnemySpawner:spawnEnemy(enemyType: string, targetPosition: Vector3): In
     enemy:SetAttribute("AttackCooldown", data.attackCooldown)
     enemy:SetAttribute("CrystalDrop", data.crystalDrop)
     enemy:SetAttribute("EnemyType", enemyType)
+    if data.isBoss then
+        enemy:SetAttribute("IsBoss", true)
+    end
     enemy:SetAttribute("Speed", data.speed)
 
-    -- Position at random spawn point around the arena edge
-    local angle = math.random() * math.pi * 2
-    local radius = Config.PLATFORM_SIZE * 0.6
-    local spawnPos = Vector3.new(
-        math.cos(angle) * radius,
-        5,
-        math.sin(angle) * radius
-    )
+    -- Position at the caller-provided point when given (boss wave), otherwise
+    -- roll a random spawn ring inside the platform edge.
+    local spawnPos
+    if targetPosition.Magnitude > 0.1 then
+        spawnPos = targetPosition
+    else
+        local angle = math.random() * math.pi * 2
+        local radius = Config.PLATFORM_SIZE * 0.4
+        spawnPos = Vector3.new(
+            math.cos(angle) * radius,
+            5,
+            math.sin(angle) * radius
+        )
+    end
     part.CFrame = CFrame.new(spawnPos)
     head.CFrame = part.CFrame * CFrame.new(0, data.size.Y * 0.35, 0)
 
     enemy.PrimaryPart = part
     enemy.Parent = self.spawnFolder
 
-    -- Make enemy walk toward target
-    humanoid:MoveTo(targetPosition)
+    -- Make enemy walk toward the wizard cluster (given targetPosition is the
+    -- spawn point — walking to it would strand enemies at the platform edge).
+    -- Repath periodically so they track moving wizards.
+    local function walkTarget(): Vector3
+        local nearestWizard, nearestDist = nil, math.huge
+        for _, plr in game:GetService("Players"):GetPlayers() do
+            local char = plr.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local d = (root.Position - part.Position).Magnitude
+                if d < nearestDist then
+                    nearestWizard, nearestDist = root, d
+                end
+            end
+        end
+        if nearestWizard then
+            return nearestWizard.Position
+        end
+        -- Fallback: platform center (wizard spawn area)
+        return Vector3.new(0, part.Position.Y, 0)
+    end
+
+    enemy:SetAttribute("RepathPending", false)
+    task.spawn(function()
+        while enemy.Parent and humanoid.Health > 0 do
+            humanoid:MoveTo(walkTarget())
+            task.wait(0.5)
+        end
+    end)
 
     -- Store reference
     table.insert(self.spawnedEnemies, enemy)
@@ -170,6 +206,25 @@ function EnemySpawner:getAliveEnemies(): { Instance }
         end
     end
     return alive
+end
+
+function EnemySpawner:getAliveCount(): number
+    -- WaveSystem.waitForWaveEnd polls this every 0.5s; it was never defined,
+    -- which errored the wave thread and froze wave progression.
+    local alive = self:getAliveEnemies()
+    return #alive
+end
+
+function EnemySpawner:getBoss(): Instance?
+    for _, enemy in self.spawnedEnemies do
+        if enemy and enemy.Parent and enemy:GetAttribute("IsBoss") then
+            local hp = enemy:GetAttribute("HP")
+            if hp and hp > 0 then
+                return enemy
+            end
+        end
+    end
+    return nil
 end
 
 function EnemySpawner:clearAll()

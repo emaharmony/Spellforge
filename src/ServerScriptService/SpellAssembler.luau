@@ -97,6 +97,10 @@ function SpellAssembler.assemble(fragmentIds: { string }): any?
 			effect = effect,
 			damageType = elemInfo and elemInfo.damageType or "pure",
 			shape = shapeId or "bolt",
+			-- Loop-critical: autoTarget reads these. Mirror top-level
+			-- targeting/range so combat code can treat computed as canonical.
+			targeting = shapeStats.targeting or "projectile",
+			range = range,
 		},
 		fragmentIds = fragmentIds,
 	}
