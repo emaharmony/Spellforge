@@ -5,21 +5,11 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
-local SpellforgeUI = require(script.Parent:WaitForChild("SpellforgeUI"))
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-
--- SF-132: crafting keybind — wire C to the existing toggle
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.KeyCode == Enum.KeyCode.C then
-		SpellforgeUI.toggle()
-	end
-end)
 
 -- Boss warning banner (SF-130)
 local bossGui = Instance.new("ScreenGui")

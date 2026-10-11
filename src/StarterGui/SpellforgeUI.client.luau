@@ -744,4 +744,14 @@ end)
 -- panel with shop + ready-up stays on top; its "Open Spellforge" button
 -- opens crafting explicitly.)
 
+-- SF-132: crafting keybind — C toggles the forge. gameProcessed guard
+-- means typing in chat (or any text field) never triggers it.
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.C then
+		SpellforgeUI.toggle()
+	end
+end)
+
 return SpellforgeUI
