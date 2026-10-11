@@ -66,7 +66,9 @@ end
 function WaveSystem:start()
 	if self.gameActive then return end
 	self.gameActive = true
-	self.currentWave = 0
+	-- TEST_MODE can begin mid-sequence (harness: exercise wave 10 boss path
+	-- without grinding). Production always starts at wave 1.
+	self.currentWave = (Config.TEST_MODE and Config.TEST_START_WAVE or 1) - 1
 	self.runStats = { kills = 0, crystalsEarned = 0, startedAt = tick() }
 
 	-- Reset systems
