@@ -128,7 +128,12 @@ function WaveSystem:getCombatState(player: Player): boolean
 end
 
 function WaveSystem:runWaves()
-	for wave = 1, self.maxWaves do
+	-- TEST_START_WAVE: skip-ahead for harness boss validation (only via TEST_MODE)
+	local startWave = 1
+	if Config.TEST_MODE and Config.TEST_START_WAVE then
+		startWave = math.clamp(Config.TEST_START_WAVE, 1, self.maxWaves)
+	end
+	for wave = startWave, self.maxWaves do
 		if not self.gameActive then return end -- defeated/rested mid-run; don't keep firing waves
 		self.currentWave = wave
 		local composition = Config.WAVE_COMPOSITION[wave]
