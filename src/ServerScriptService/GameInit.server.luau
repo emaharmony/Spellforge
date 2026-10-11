@@ -440,6 +440,34 @@ local function onPlayerAdded(player: Player)
 	end)
 end
 
+-- TEST_MODE watcher: the harness flips Config.TEST_MODE mid-session (after join,
+-- possibly after run start). When it flips, apply the crafted-spell fixture to
+-- all registered players once — the attack loop reads .spell each tick, so the
+-- swap takes effect on the next cast without touching live state otherwise.
+task.spawn(function()
+	while true do
+		if Config.TEST_MODE and not testStimApplied then
+			testStimApplied = true
+			for _, plr in Players:GetPlayers() do
+				local pd = waveSystem.players[plr.UserId]
+				if pd then
+					local crafted = SpellAssembler.assemble({
+						"fire_element",
+						"fire_shape_nova",
+						"fire_power_supernova",
+						"fire_mod_split",
+					})
+					if crafted then
+						pd.spell = crafted
+						plr:SetAttribute("EquippedSpell", crafted.id)
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
 -- Handle player removal
 Players.PlayerRemoving:Connect(function(player)
 	dataManager:onPlayerRemoving(player)
