@@ -13,7 +13,16 @@ DataManager.__index = DataManager
 
 function DataManager.new()
 	local self = setmetatable({}, DataManager)
-	self.store = DataStoreService:GetDataStore("SpellforgePlayerData")
+	-- Unpublished/local places can't access DataStore ("You must publish
+	-- this place..."). Fall back to session-only persistence instead of
+	-- killing the whole server init chain.
+	local ok, store = pcall(function()
+		return DataStoreService:GetDataStore("SpellforgePlayerData")
+	end)
+	self.store = ok and store or nil
+	if not self.store then
+		warn("[Spellforge] DataManager: DataStore unavailable — running session-only (progress will not survive restarts)")
+	end
 	self.cache = {} -- player id -> data
 	return self
 end
@@ -39,9 +48,12 @@ end
 function DataManager:loadData(player: Player)
 	local key = "player_" .. player.UserId
 
-	local success, data = pcall(function()
-		return self.store:GetAsync(key)
-	end)
+	local success, data = false, nil
+	if self.store then
+		success, data = pcall(function()
+			return self.store:GetAsync(key)
+		end)
+	end
 
 	if success and data then
 		self.cache[player.UserId] = data
@@ -78,6 +90,7 @@ function DataManager:saveData(player: Player)
 		end
 	end
 
+	if not self.store then return end
 	local key = "player_" .. player.UserId
 	pcall(function()
 		self.store:SetAsync(key, data)
