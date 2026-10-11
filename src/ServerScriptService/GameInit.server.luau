@@ -323,9 +323,22 @@ local function onPlayerAdded(player: Player)
 		staff.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(1.5, 0, 0)
 	end
 
-	player.CharacterAdded:Connect(onCharacterAdded)
+	-- SF-140a: respawn guarantee. Roblox respawns at SpawnLocation which drifts
+	-- (PT-001 saw -9,-9); explicitly place every character on the spawn pad.
+	local function placeOnPlatform(character: Model)
+		local hrp = character:WaitForChild("HumanoidRootPart", 5)
+		if hrp then
+			hrp.CFrame = CFrame.new(0, 3, 0)
+		end
+	end
+
+	player.CharacterAdded:Connect(function(character)
+		onCharacterAdded(character)
+		placeOnPlatform(character)
+	end)
 	if player.Character then
 		onCharacterAdded(player.Character)
+		placeOnPlatform(player.Character)
 	end
 
 	-- Handle heal request

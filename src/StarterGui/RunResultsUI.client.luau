@@ -99,6 +99,17 @@ Remotes.GameOver.OnClientEvent:Connect(function(reason: string, stats: any)
 		return
 	end
 	stats = stats or {}
+
+	-- SF-140b: run ended — close the rest/crafting panels so they don't
+	-- overlap the results screen (PT-001: Wave Complete + Defeated both up)
+	local playerGui = script.Parent
+	for _, name in { "WaveRestUI", "SpellforgeCrafting" } do
+		local gui = playerGui:FindFirstChild(name, true)
+		if gui and gui:IsA("ScreenGui") then
+			gui.Enabled = false
+		end
+	end
+
 	local isNewBest = stats.victory == true and stats.isBest == true
 	local waveReached = tostring(stats.wave or "?")
 	if reason == "victory" then
