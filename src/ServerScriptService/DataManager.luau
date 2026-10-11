@@ -64,6 +64,13 @@ function DataManager:saveData(player: Player)
 
 	data.crystals = player:GetAttribute("Crystals") or 0
 	data.lastSave = os.time()
+	if self.getFragmentsSnapshot then
+		-- Phase 2: fragments persist from the server-truth inventory
+		local snapshot = self.getFragmentsSnapshot(player)
+		if snapshot then
+			data.fragments = snapshot
+		end
+	end
 
 	local key = "player_" .. player.UserId
 	pcall(function()

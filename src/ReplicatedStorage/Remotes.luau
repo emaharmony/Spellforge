@@ -46,5 +46,6 @@ Remotes.HealResult = ensureRemote("HealResult", "RemoteEvent")
 Remotes.BossWarning = ensureRemote("BossWarning", "RemoteEvent")
 Remotes.ElementalCombo = ensureRemote("ElementalCombo", "RemoteEvent")
 Remotes.PlayAgain = ensureRemote("PlayAgain", "RemoteEvent")
+Remotes.InventorySync = ensureRemote("InventorySync", "RemoteEvent")
 
 return Remotes
