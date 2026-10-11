@@ -270,6 +270,20 @@ local function onPlayerAdded(player: Player)
 	if not equippedSpell then
 		equippedSpell = SpellAssembler.createStarterSpell()
 	end
+	if Config.TEST_MODE then
+		-- Test fixture: a rare-power crafted spell via the REAL recipe pipeline
+		-- (assemble, not attribute injection). Models a player who crafted
+		-- between waves — production never runs this branch.
+		local crafted = SpellAssembler.assemble({
+			"fire_element",
+			"fire_shape_nova",
+			"fire_power_supernova",
+			"fire_mod_split",
+		})
+		if crafted then
+			equippedSpell = crafted
+		end
+	end
 	if equippedSpell then
 		player:SetAttribute("EquippedSpell", equippedSpell.id)
 		waveSystem:addPlayer(player, equippedSpell)
