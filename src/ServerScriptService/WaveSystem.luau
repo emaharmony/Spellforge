@@ -19,6 +19,7 @@ function WaveSystem.new()
 	self.fragmentDropper = nil
 	self.crystalManager = nil
 	self.waveThread = nil
+	self.runStats = nil -- populated in start(): { kills, crystalsEarned, startedAt }
 	self.readyPlayers = {} -- player id -> bool
 	self.combatState = {} -- player id -> { inCombat: bool, lastCombatTime: number }
 	return self
@@ -51,6 +52,7 @@ function WaveSystem:start()
 	if self.gameActive then return end
 	self.gameActive = true
 	self.currentWave = 0
+	self.runStats = { kills = 0, crystalsEarned = 0, startedAt = tick() }
 
 	-- Reset systems
 	if self.fragmentDropper then
@@ -69,7 +71,8 @@ function WaveSystem:stop()
 		self.enemySpawner:clearAll()
 	end
 	if self.waveThread then
-		task.cancel(self.waveThread)
+		pcall(task.cancel, self.waveThread)
+		self.waveThread = nil
 	end
 end
 
@@ -109,6 +112,7 @@ end
 
 function WaveSystem:runWaves()
 	for wave = 1, self.maxWaves do
+		if not self.gameActive then return end -- defeated/rested mid-run; don't keep firing waves
 		self.currentWave = wave
 		local composition = Config.WAVE_COMPOSITION[wave]
 
@@ -143,6 +147,9 @@ function WaveSystem:runWaves()
 
 		-- Award wave completion
 		local waveCrystals = Config.CRYSTAL_PER_WAVE_BASE * wave
+		if self.runStats then
+			self.runStats.crystalsEarned += waveCrystals * #self.players
+		end
 		for userId, data in self.players do
 			if data.player and data.player.Parent then
 				if self.crystalManager then
@@ -176,8 +183,48 @@ function WaveSystem:runWaves()
 	end
 
 	-- Victory!
-	Remotes.GameOver:FireAllClients("victory")
+	self:announceGameOver("victory")
+end
+
+-- Broadcast end-of-run with stats and reset run state so start() can run again.
+function WaveSystem:announceGameOver(reason: string)
+	Remotes.GameOver:FireAllClients(reason, {
+		wave = math.min(self.currentWave, self.maxWaves),
+		maxWaves = self.maxWaves,
+		kills = self.runStats and self.runStats.kills or 0,
+		crystalsEarned = self.runStats and self.runStats.crystalsEarned or 0,
+	})
 	self.gameActive = false
+	self.waveActive = false
+end
+
+-- Full reset so a finished run can be replayed (Phase 1 run integrity).
+function WaveSystem:reset()
+	if self.waveThread then
+		task.cancel(self.waveThread)
+		self.waveThread = nil
+	end
+	self:stop()
+	self.currentWave = 0
+	self.readyPlayers = {}
+	self.combatState = {}
+	self.runStats = nil
+	for _, enemy in self.enemySpawner and self.enemySpawner.spawnedEnemies or {} do
+		if enemy and enemy.Parent then
+			enemy:Destroy()
+		end
+	end
+	if self.enemySpawner then
+		self.enemySpawner.spawnedEnemies = {}
+	end
+end
+
+-- Track a kill with its crystal credit (called via co-op onEnemyDeath only)
+function WaveSystem:recordKill(crystalAmount: number)
+	if self.runStats then
+		self.runStats.kills += 1
+		self.runStats.crystalsEarned += crystalAmount or 0
+	end
 end
 
 function WaveSystem:spawnWave(composition: any)
@@ -220,9 +267,7 @@ function WaveSystem:waitForWaveEnd()
 
 		if allDead then
 			-- All players dead — game over
-			Remotes.GameOver:FireAllClients("defeated")
-			self.gameActive = false
-			self.waveActive = false
+			self:announceGameOver("defeated")
 			return
 		end
 
@@ -264,6 +309,11 @@ function WaveSystem:restPhase(completedWave: number)
 end
 
 function WaveSystem:onEnemyDeath(enemy: Instance, killedBy: Player?)
+	-- Once-per-enemy latch: two casts landing on the same target before its
+	-- 0.5s Destroy must not pay double crystals/fragments.
+	if enemy:GetAttribute("DeathProcessed") then return end
+	enemy:SetAttribute("DeathProcessed", true)
+
 	-- Award crystals
 	if killedBy and self.crystalManager then
 		local enemyRarity = enemy:GetAttribute("Rarity") or "common"
@@ -301,6 +351,8 @@ function WaveSystem:onEnemyDeath(enemy: Instance, killedBy: Player?)
 		if self.fragmentDropper then
 			self.fragmentDropper:recordKill(killedBy, enemyRarity)
 		end
+
+		self:recordKill(crystalAmount)
 	end
 end
 

@@ -45,5 +45,6 @@ Remotes.SpellAssembled = ensureRemote("SpellAssembled", "RemoteEvent")
 Remotes.HealResult = ensureRemote("HealResult", "RemoteEvent")
 Remotes.BossWarning = ensureRemote("BossWarning", "RemoteEvent")
 Remotes.ElementalCombo = ensureRemote("ElementalCombo", "RemoteEvent")
+Remotes.PlayAgain = ensureRemote("PlayAgain", "RemoteEvent")
 
 return Remotes

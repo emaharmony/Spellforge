@@ -117,9 +117,12 @@ Remotes.GameOver.OnClientEvent:Connect(function(reason: string)
     if reason == "victory" then
         statusLabel.Text = "🎉 Victory! 🎉"
         statusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-    else
+    elseif reason == "defeated" then
         statusLabel.Text = "💀 Defeated! 💀"
         statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+    elseif reason == "died_waiting_revive" then
+        statusLabel.Text = "☠ You fell! (run continues)"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 120, 120)
     end
     statusLabel.Visible = true
 end)
