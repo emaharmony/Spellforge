@@ -266,7 +266,11 @@ end
 
 function WaveSystem:spawnWave(composition: any)
 	if composition.isBoss then
-		-- Boss wave
+		-- Boss wave — warn clients BEFORE the spawn (SF-130: remote existed, never fired)
+		Remotes.BossWarning:FireAllClients({
+			name = "Amber Colossus",
+			wave = self.currentWave,
+		})
 		self.enemySpawner:spawnEnemy("boss", Vector3.new(0, 5, -30))
 	else
 		-- Regular wave — spawn from edges
