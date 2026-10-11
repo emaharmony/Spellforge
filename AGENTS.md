@@ -2,56 +2,81 @@
 
 ## Identity
 
-Spellforge is a co-op wizard wave-defense game with modular spell crafting, built in Roblox (Luau, Rojo). Current mission: prototype playable beginning-to-end, then scale into a deep collection game (12 elements, 4-tier power ladder, rarity 2.0).
+Spellforge is a co-op wizard wave-defense game with modular spell crafting,
+built in Roblox (Luau, Rojo). Current mission: ship the playable prototype
+(beginning-to-end run), then scale into a deep collection game (12 elements,
+4-tier power ladder, rarity 2.0).
 
-## Project Governance (MANDATORY — applies in ALL projects, see below)
+This file is **binding agent procedure** for every session in this repo.
+If a prompt or request conflicts with this file, the conflict must be raised
+before work starts — not resolved silently.
 
-### RULE 1 — Alignment before work: read Goal & Roadmap first
-Before starting any session, task, feature, refactor, or "quick fix" in this
-project, read [docs/GOAL_AND_ROADMAP.md](docs/GOAL_AND_ROADMAP.md) (goal,
-success criteria, phase roadmap, exit criteria). Then confirm the planned work
-**aligns with a roadmap phase** and belongs to a task in
-[docs/tasks.md](docs/tasks.md).
+## Session Start Procedure (mandatory, before ANY work)
 
-If a task does not map to a roadmap phase or task ID, do not silently proceed —
-either (a) add it to the roadmap + tracker with an explicit ID and get it
-approved, or (b) push back: it may be out of scope. **Roadmap first is how we
-prevent straying.** The tracker's task IDs are the only sanctioned unit of work.
+Before writing any code, creating any branch, or making any design decision,
+do the following in order:
 
-### RULE 2 — Completion means the log is written
-A task is NOT complete when the code is done. It is complete when:
-1. The change is committed (PRs only — one task = one branch = one PR)
-2. [docs/tasks.md](docs/tasks.md) is updated: status change or a dated "Done"
-   row with **task ID, roadmap phase tag, result, and evidence** (commit hash,
-   PR number, test/playtest result)
-3. Every entry names the roadmap phase it belongs to — no phase, no entry
+1. Read [docs/GOAL_AND_ROADMAP.md](docs/GOAL_AND_ROADMAP.md). State, in one
+   line, which **phase of the roadmap** the requested work belongs to.
+2. Read [docs/tasks.md](docs/tasks.md). Identify the **task ID** (SF-xxx)
+   the work falls under, and say so before starting.
+3. If the work maps to neither — **stop**. Either:
+   - propose adding it to the roadmap + tasks.md with a new ID (wait for
+     approval), or
+   - decline it as out of scope, citing the roadmap.
 
-If the work changed the roadmap itself (new phase, scope shift), update
-[docs/GOAL_AND_ROADMAP.md](docs/GOAL_AND_ROADMAP.md) in the same commit —
-the two documents must never drift.
+   Do not start work that is not in the roadmap. "It's small" or "it's just a
+   fix" does not exempt it. Unmapped work is the definition of straying.
 
-### RULE 3 — Playtest evidence gates merges
-Every phase is playtested in Studio before its PR merges (notes →
-`docs/playtest/PT-NNN.md`). "Should work" is not evidence. Static review can
-land a draft PR, but the phase is not "done" until the playtest checklist in
-its PR passes.
+4. If the session is a *design* session (no code), the output is roadmap or
+   tasks.md updates — the session is not finished until they are written.
 
-## THE RULE — universal, all projects
-Every project Lumi works on must have (a) a goal/roadmap document and (b) a
-task tracker that logs completed work against that roadmap. RULE 1 (read and
-align first) and RULE 2 (update the log after) are **hard requirements in all
-projects moving forward**. If a similar document already exists in a project,
-the project's AGENTS.md must point to it with the same RULE — the discipline
-transfers, the filenames do not have to match.
+## Session End Procedure (mandatory, work is not complete without it)
 
-Example: Prizm's equivalent is
-[`AGENTS.md` → "Roadmap and Work Log Discipline"](https://github.com/emaharmony/prizm)
-which governs `docs/architecture/PRIZM_ROADMAP.md`, `docs/operations/PLAN_OF_ACTION.md`,
-and `docs/operations/WORK_LOG.md`.
+A task is **not complete when the code is written**. It is complete when all
+of the following are true:
+
+1. The change is committed and pushed. PRs only — one task = one branch = one
+   PR, targeting `master`. No direct pushes, no merging without Ema's review.
+2. [docs/tasks.md](docs/tasks.md) is updated **in the same session, before
+   reporting done**:
+   - move the task row from Upcoming/In-Progress to **Done**, or update its
+     status field;
+   - the Done row **must contain**: task ID, date, phase tag (e.g. "Phase 2"),
+     one-line result, and evidence (commit hash, PR number, or playtest file).
+   - an entry without a phase tag is invalid — write the phase or the work
+     didn't count.
+3. If the work changed the roadmap itself (new phase, scope shift, design
+   lock), [docs/GOAL_AND_ROADMAP.md](docs/GOAL_AND_ROADMAP.md) is updated in
+   the same commit — the roadmap and the tracker must never drift apart.
+4. Playtest-gated phases are not "done" on static review: the PR's validation
+   checklist must pass in Studio (notes → `docs/playtest/PT-NNN.md`).
+   "Should work" is not evidence.
+
+## Universal Rule (all projects)
+
+Every project an agent works on must have (a) a goal/roadmap document and
+(b) a task tracker logging completed work against that roadmap. The Session
+Start and Session End procedures above are **hard requirements in all
+projects moving forward**. When a project already has equivalent documents,
+the agent must locate them and follow this same discipline against those
+files — the procedure is universal; the filenames are local.
+
+Reference implementations:
+- Spellforge: `docs/GOAL_AND_ROADMAP.md` + `docs/tasks.md` (this file governs)
+- Prizm: `AGENTS.md` → "Roadmap and Work Log Discipline" section, governing
+  `docs/architecture/PRIZM_ROADMAP.md`, `docs/operations/PLAN_OF_ACTION.md`,
+  `docs/operations/WORK_LOG.md`
 
 ## Technical Notes
-- **Stack:** Luau, Rojo (serve on port 34877), Roblox Studio on Ema's machine only
-- **Validation:** no local Roblox runtime — static checks + review on the Mac mini; playtest evidence comes from Ema's Studio sessions
-- **Structure:** server (`src/ServerScriptService/`) authoritative for all game state; clients render. Fragment inventory is server-truth (Phase 2)
-- **Branch model:** PRs only, `master` is the mainline (the GitHub default branch is a fossil — PRs target master)
-- **Reference:** [docs/PROTOTYPE_PLAN.md](docs/PROTOTYPE_PLAN.md) (phase detail), [docs/tasks.md](docs/tasks.md) (task tracker)
+
+- **Stack:** Luau, Rojo (serve on port 34877), Roblox Studio on Ema's machine
+  only — no local Roblox runtime on the Mac mini. Static checks + code review
+  here; playtest evidence comes from Ema's Studio sessions.
+- **Architecture:** server (`src/ServerScriptService/`) is authoritative for
+  all game state; clients render. Fragment inventory is server-truth (PR #3).
+- **Branch model:** PRs target `master`. The GitHub default branch is a
+  fossil from an orphan history — do not target it.
+- **Docs:** [docs/PROTOTYPE_PLAN.md](docs/PROTOTYPE_PLAN.md) (phase detail),
+  [docs/tasks.md](docs/tasks.md) (task tracker),
+  [docs/GOAL_AND_ROADMAP.md](docs/GOAL_AND_ROADMAP.md) (goal + roadmap).
