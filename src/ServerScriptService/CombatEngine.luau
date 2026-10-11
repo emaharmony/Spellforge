@@ -41,8 +41,14 @@ function CombatEngine:castSpell(player: Player, spell: any, targets: { Instance 
         end
     end
 
-    -- Notify clients
-    Remotes.SpellFired:FireAllClients(player, spell.computed)
+    -- Notify clients (target positions ride along so the VFX can draw direction)
+    local targetPositions = {}
+    for _, target in targets do
+        if target and target.Parent then
+            table.insert(targetPositions, target:GetPivot().Position)
+        end
+    end
+    Remotes.SpellFired:FireAllClients(player, spell.computed, targetPositions)
 end
 
 function CombatEngine:applyDamage(enemy: Instance, damage: number, sourcePlayer: Player?)
