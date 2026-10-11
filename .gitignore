@@ -1,0 +1,29 @@
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+credentials.json
+secrets.json
+tokens.json
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database
+*.db
+*.db-wal
+*.db-shm

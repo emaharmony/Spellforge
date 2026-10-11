@@ -135,7 +135,10 @@ function CombatEngine:autoTarget(player: Player, spell: any, enemies: { Instance
 
     local wizardPos = wizard:GetPivot().Position
     local targeting = spell.computed.targeting
-    local range = spell.computed.range * Config.SPELL_CAST_RANGE
+    -- Range is already in studs from SpellAssembler (SPELL_BASE_RANGE × shape
+    -- multiplier). The old `* Config.SPELL_CAST_RANGE` made every spell reach
+    -- ~3000 studs (whole-map), trivializing positioning. Cap for safety.
+    local range = math.min(spell.computed.range, Config.SPELL_CAST_RANGE)
 
     local targets = {}
 
