@@ -29,9 +29,13 @@ local coopManager = CoopManager.new()
 local dataManager = DataManager.new()
 
 -- Wire systems together
-waveSystem:setSystems(enemySpawner, combatEngine, SpellAssembler, fragmentDropper, crystalManager)
+waveSystem:setSystems(enemySpawner, combatEngine, SpellAssembler, fragmentDropper, crystalManager, fragmentInventory)
 combatEngine:setWaveSystem(waveSystem)
 crystalManager:setFragmentDropper(fragmentDropper)
+crystalManager:setFragmentInventory(fragmentInventory)
+dataManager.getFragmentsSnapshot = function(plr: Player)
+	return fragmentInventory:getFragments(plr)
+end
 crystalManager:setupRemotes()
 
 -- Create battle platform
@@ -260,6 +264,22 @@ local function onPlayerAdded(player: Player)
 		waveSystem:addPlayer(player, starterSpell)
 	end
 
+	-- Seed server inventory from persisted data; new players get the starter kit
+	local savedCount = 0
+	for fragId, count in pairs(data.fragments or {}) do
+		if typeof(fragId) == "string" and typeof(count) == "number" and count > 0 then
+			fragmentInventory:addFragment(player, fragId, count)
+			savedCount += count
+		end
+	end
+	if savedCount == 0 then
+		-- Starter kit: exactly the fragments that make the starter spell re-craftable
+		for _, fragId in { "fire_element", "fire_shape_bolt", "fire_power_ember", "fire_mod_split" } do
+			fragmentInventory:addFragment(player, fragId, 1)
+		end
+	end
+	fragmentInventory:sync(player)
+
 	-- Set element bias
 	fragmentDropper:setElementBias(player, "fire")
 
@@ -305,19 +325,35 @@ local function onPlayerAdded(player: Player)
 		end
 	end)
 
-	-- Handle spell assembly
+	-- Handle spell assembly — the economy gate:validate ownership, then deduct
 	Remotes.AssembleSpell.OnServerEvent:Connect(function(requestingPlayer, fragmentIds)
-		if requestingPlayer == player and typeof(fragmentIds) == "table" then
-			local spell = SpellAssembler.assemble(fragmentIds)
-			if spell then
-				player:SetAttribute("EquippedSpell", spell.id)
-				waveSystem.players[player.UserId].spell = spell
-				Remotes.SpellAssembled:FireClient(player, spell)
-
-				-- Update element bias
-				coopManager:setPlayerElement(player, spell.element)
-			end
+		if requestingPlayer ~= player or typeof(fragmentIds) ~= "table" then return end
+		if #fragmentIds ~= 4 then return end
+		for _, fragId in fragmentIds do
+			if typeof(fragId) ~= "string" then return end
 		end
+
+		-- Server inventory is truth: player must own every fragment
+		if not fragmentInventory:hasAllFragments(player, fragmentIds) then
+			Remotes.SpellAssembled:FireClient(player, nil, "missing_fragments")
+			return
+		end
+
+		local spell = SpellAssembler.assemble(fragmentIds)
+		if not spell then
+			Remotes.SpellAssembled:FireClient(player, nil, "invalid_recipe")
+			return
+		end
+
+		-- Consume the four fragments (inventory syncs automatically)
+		fragmentInventory:removeFragments(player, fragmentIds)
+
+		player:SetAttribute("EquippedSpell", spell.id)
+		waveSystem.players[player.UserId].spell = spell
+		Remotes.SpellAssembled:FireClient(player, spell)
+
+		-- Update element bias
+		coopManager:setPlayerElement(player, spell.element)
 	end)
 end
 

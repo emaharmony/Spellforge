@@ -612,17 +612,9 @@ function SpellforgeUI:assembleSpell()
 		table.insert(fragmentIds, assemblySlots[slotName])
 	end
 
-	-- Send to server
+	-- Send to server — slots clear (and fragments actually deduct) on the
+	-- server's SpellAssembled confirmation, so a rejection keeps the layout
 	Remotes.AssembleSpell:FireServer(fragmentIds)
-
-	-- Clear assembly slots
-	for _, slotName in Config.FRAGMENT_SLOTS do
-		assemblySlots[slotName] = nil
-	end
-
-	self:updateAssemblyDisplay()
-	self:updatePreview()
-	updateFragmentGrid()
 end
 
 -----------------------------------------------------------------------
@@ -644,13 +636,10 @@ function SpellforgeUI.close()
 	end
 	isOpen = false
 
-	-- Return any fragments in assembly slots back to inventory
+	-- Return placed fragments visually: server never deducted un-assembled
+	-- slots, so just clear (InventorySync remains the authoritative count)
 	for _, slotName in Config.FRAGMENT_SLOTS do
-		if assemblySlots[slotName] then
-			local fragId = assemblySlots[slotName]
-			fragments[fragId] = (fragments[fragId] or 0) + 1
-			assemblySlots[slotName] = nil
-		end
+		assemblySlots[slotName] = nil
 	end
 end
 
@@ -686,16 +675,73 @@ Remotes.FragmentReceived.OnClientEvent:Connect(function(fragData: any)
 	end
 end)
 
-Remotes.SpellAssembled.OnClientEvent:Connect(function(spellData: any)
-	equippedSpell = spellData
-	-- Could show a notification here
+-- Server inventory is the single source of truth: replace local state wholesale
+Remotes.InventorySync.OnClientEvent:Connect(function(inventory: any)
+	if typeof(inventory) ~= "table" then return end
+	for fragId in pairs(fragments) do
+		fragments[fragId] = nil
+	end
+	for fragId, count in pairs(inventory) do
+		if type(fragId) == "string" and type(count) == "number" then
+			fragments[fragId] = count
+		end
+	end
+	updateFragmentGrid()
 end)
 
-Remotes.RestPhase.OnClientEvent:Connect(function(data: any)
-	-- Auto-open crafting during rest phase
-	if data and data.restPhase then
-		SpellforgeUI.open()
+-- Shop feedback (Phase 2)
+Remotes.ShopResult.OnClientEvent:Connect(function(success: boolean, info: any)
+	info = info or {}
+	if success then
+		print("[Shop] Bought", info.pack, "pack:", info.fragments, "fragments")
+	else
+		local reason = info.reason or "unknown"
+		if reason == "not_enough_crystals" then
+			print("[Shop] Not enough crystals for", info.pack, "pack")
+		else
+			print("[Shop] Purchase unavailable")
+		end
 	end
 end)
+
+Remotes.SpellAssembled.OnClientEvent:Connect(function(spellData: any, failureReason: string?)
+	if not spellData then
+		-- Rejected by server: restore the placed fragments visually (server did
+		-- NOT deduct — InventorySync will confirm the true state momentarily)
+		local message = failureReason == "missing_fragments"
+			and "⚠ Missing fragments — check inventory"
+			or "⚠ Invalid recipe — forge rejected those fragments"
+		local statsFrame = screenGui and screenGui:FindFirstChild("Container/Content/RightPanel/PreviewPanel/Stats", true)
+		if statsFrame then
+			for _, child in statsFrame:GetChildren() do
+				if child:IsA("TextLabel") then
+					child:Destroy()
+				end
+			end
+			local note = Instance.new("TextLabel")
+			note.Size = UDim2.new(1, 0, 0, 40)
+			note.BackgroundTransparency = 1
+			note.Font = Enum.Font.Gotham
+			note.TextSize = 14
+			note.TextColor3 = Color3.fromRGB(255, 120, 120)
+			note.TextWrapped = true
+			note.Text = message
+			note.Parent = statsFrame
+		end
+		return
+	end
+	equippedSpell = spellData
+	-- Server deducted the placed fragments — clear the slots to match
+	for _, slotName in Config.FRAGMENT_SLOTS do
+		assemblySlots[slotName] = nil
+	end
+	updateAssemblyDisplay()
+	updatePreview()
+	updateFragmentGrid()
+end)
+
+-- (RestPhase intentionally does NOT auto-open crafting here — the rest
+-- panel with shop + ready-up stays on top; its "Open Spellforge" button
+-- opens crafting explicitly.)
 
 return SpellforgeUI

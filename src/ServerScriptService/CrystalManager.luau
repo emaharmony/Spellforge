@@ -9,8 +9,12 @@ CrystalManager.__index = CrystalManager
 function CrystalManager.new()
 	local self = setmetatable({}, CrystalManager)
 	self.fragmentDropper = nil
-	self.inventories = {} -- player id -> { crystals: number, fragments: {string}, spells: {string} }
+	self.fragmentInventory = nil -- set via setFragmentInventory (Phase 2: server truth)
 	return self
+end
+
+function CrystalManager:setFragmentInventory(fragmentInventory: any)
+	self.fragmentInventory = fragmentInventory
 end
 
 function CrystalManager:setFragmentDropper(fragmentDropper: any)
@@ -70,7 +74,7 @@ function CrystalManager:healPlayer(player: Player): boolean
 	return true
 end
 
--- Buy a fragment pack
+-- Buy a fragment pack: validate → spend once → generate → record to server inventory
 function CrystalManager:buyPack(player: Player, packType: string): { any }?
 	local packConfig = Config.CRYSTAL_PACKS[packType]
 	if not packConfig then
@@ -78,16 +82,30 @@ function CrystalManager:buyPack(player: Player, packType: string): { any }?
 		return nil
 	end
 
+	if not self.fragmentDropper then
+		warn("[CrystalManager] No dropper wired; refusing purchase")
+		return nil
+	end
+
+	-- Generate FIRST, then spend — an empty pack can never eat crystals
+	local fragments = self.fragmentDropper:generatePack(packType)
+	if #fragments == 0 then
+		return nil
+	end
+
 	if not self:spendCrystals(player, packConfig.cost) then
 		return nil -- not enough crystals
 	end
 
-	-- Generate pack fragments
-	if self.fragmentDropper then
-		return self.fragmentDropper:generatePack(packType)
+	if self.fragmentInventory then
+		for _, frag in fragments do
+			if frag and frag.id then
+				self.fragmentInventory:addFragment(player, frag.id, 1)
+			end
+		end
 	end
 
-	return {}
+	return fragments
 end
 
 -- Initialize player data
@@ -103,11 +121,24 @@ function CrystalManager:setupRemotes()
 		if typeof(packType) ~= "string" then return end
 		if not Config.CRYSTAL_PACKS[packType] then return end
 
+		local packConfig = Config.CRYSTAL_PACKS[packType]
 		local fragments = self:buyPack(player, packType)
 		if fragments then
 			for _, frag in fragments do
 				Remotes.FragmentReceived:FireClient(player, frag)
 			end
+			Remotes.ShopResult:FireClient(player, true, {
+				pack = packType,
+				cost = packConfig.cost,
+				fragments = #fragments,
+			})
+		else
+			local reason = self:getCrystals(player) < packConfig.cost and "not_enough_crystals" or "unavailable"
+			Remotes.ShopResult:FireClient(player, false, {
+				pack = packType,
+				cost = packConfig.cost,
+				reason = reason,
+			})
 		end
 	end)
 end

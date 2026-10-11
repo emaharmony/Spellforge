@@ -18,6 +18,7 @@ function WaveSystem.new()
 	self.spellAssembler = nil
 	self.fragmentDropper = nil
 	self.crystalManager = nil
+	self.fragmentInventory = nil
 	self.waveThread = nil
 	self.runStats = nil -- populated in start(): { kills, crystalsEarned, startedAt }
 	self.readyPlayers = {} -- player id -> bool
@@ -25,12 +26,13 @@ function WaveSystem.new()
 	return self
 end
 
-function WaveSystem:setSystems(enemySpawner: any, combatEngine: any, spellAssembler: any, fragmentDropper: any, crystalManager: any)
+function WaveSystem:setSystems(enemySpawner: any, combatEngine: any, spellAssembler: any, fragmentDropper: any, crystalManager: any, fragmentInventory: any)
 	self.enemySpawner = enemySpawner
 	self.combatEngine = combatEngine
 	self.spellAssembler = spellAssembler
 	self.fragmentDropper = fragmentDropper
 	self.crystalManager = crystalManager
+	self.fragmentInventory = fragmentInventory
 end
 
 function WaveSystem:addPlayer(player: Player, spell: any)
@@ -42,6 +44,17 @@ function WaveSystem:addPlayer(player: Player, spell: any)
 		inCombat = false,
 		lastCombatTime = 0,
 	}
+end
+
+-- Grant a fragment drop: server inventory is truth, notify + sync the client
+function WaveSystem:grantFragment(player: Player, frag: any)
+	if not (frag and frag.id) then return end
+	if self.fragmentInventory then
+		self.fragmentInventory:addFragment(player, frag.id, 1)
+	else
+		-- No inventory wired (shouldn't happen) — still notify for visibility
+		Remotes.FragmentReceived:FireClient(player, frag)
+	end
 end
 
 function WaveSystem:isGameActive(): boolean
@@ -160,7 +173,7 @@ function WaveSystem:runWaves()
 				if self.fragmentDropper then
 					local drops = self.fragmentDropper:dropForWave(data.player, wave)
 					for _, frag in drops do
-						Remotes.FragmentReceived:FireClient(data.player, frag)
+						self:grantFragment(data.player, frag)
 					end
 				end
 
@@ -285,6 +298,13 @@ function WaveSystem:restPhase(completedWave: number)
 		completedWave = completedWave,
 		nextWave = completedWave + 1,
 	})
+	-- Crafting UI auto-opens during rest (SpellforgeUI listens on this)
+	Remotes.RestPhase:FireAllClients({
+		restPhase = true,
+		restTime = Config.WAVE_REST_TIME,
+		completedWave = completedWave,
+		nextWave = completedWave + 1,
+	})
 
 	-- Wait for rest period or all players ready
 	while tick() < restEndTime and self.gameActive do
@@ -343,7 +363,7 @@ function WaveSystem:onEnemyDeath(enemy: Instance, killedBy: Player?)
 		if self.fragmentDropper then
 			local fragDrop = self.fragmentDropper:dropForKill(killedBy)
 			if fragDrop then
-				Remotes.FragmentReceived:FireClient(killedBy, fragDrop)
+				self:grantFragment(killedBy, fragDrop)
 			end
 		end
 

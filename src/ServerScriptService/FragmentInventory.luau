@@ -1,6 +1,8 @@
 -- FragmentInventory.luau — Player fragment collection with slot tracking and lookup
+-- (Phase 2 economy integrity: this module is the server-side source of truth.)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local FragmentInventory = {}
 FragmentInventory.__index = FragmentInventory
@@ -22,6 +24,7 @@ function FragmentInventory:addFragment(player: Player, fragmentId: string, count
 	end
 	local c = count or 1
 	self.inventories[player.UserId][fragmentId] = (self.inventories[player.UserId][fragmentId] or 0) + c
+	self:sync(player)
 	return self.inventories[player.UserId][fragmentId]
 end
 
@@ -34,6 +37,7 @@ function FragmentInventory:removeFragment(player: Player, fragmentId: string, co
 	if self.inventories[player.UserId][fragmentId] <= 0 then
 		self.inventories[player.UserId][fragmentId] = nil
 	end
+	self:sync(player)
 	return true
 end
 
@@ -107,6 +111,13 @@ end
 
 function FragmentInventory:clearInventory(player: Player)
 	self.inventories[player.UserId] = {}
+	self:sync(player)
+end
+
+-- Push the authoritative {id=count} table to the client (join + after every change)
+function FragmentInventory:sync(player: Player)
+	local inventory = self.inventories[player.UserId] or {}
+	Remotes.InventorySync:FireClient(player, inventory)
 end
 
 function FragmentInventory:equipSpell(player: Player, spellData: any)
