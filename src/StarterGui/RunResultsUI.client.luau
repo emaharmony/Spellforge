@@ -1,4 +1,14 @@
 -- RunResultsUI.client.luau — End-of-run results screen with Play Again (Phase 1 run integrity)
+-- Idempotency guard: Roblox re-clones StarterGui scripts into PlayerGui on
+-- every character respawn; without this, a mid-run death duplicates every
+-- GUI and listener (PT-002 root cause for overlapping panels).
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+if localPlayer:GetAttribute("SF_RunResultsUILoaded") then
+	return
+end
+localPlayer:SetAttribute("SF_RunResultsUILoaded", true)
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))

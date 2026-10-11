@@ -3,6 +3,16 @@
 -- 2. First-join instruction card — shows until the player finishes wave 1.
 -- 3. C keybind toggles the crafting UI (SpellforgeUI.toggle exists, was unwired).
 
+-- Idempotency guard: Roblox re-clones StarterGui scripts into PlayerGui on
+-- every character respawn; without this, a mid-run death duplicates every
+-- GUI and listener (PT-002 root cause for overlapping panels).
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+if localPlayer:GetAttribute("SF_OnboardingGlueLoaded") then
+	return
+end
+localPlayer:SetAttribute("SF_OnboardingGlueLoaded", true)
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

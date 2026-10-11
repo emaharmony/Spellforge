@@ -12,7 +12,7 @@ Config.WAVE_REST_TIME = 15 -- seconds between waves (crafting/shop time)
 -- Skips rest-phase waits (the harness cannot click Ready Up) and shrinks
 -- nothing else — waves, HP, damage, economy all stay production values.
 -- Production servers NEVER set this (default false).
-Config.TEST_MODE = false
+Config.TEST_MODE = true -- LOCAL FLIP FOR HARNESS RUN; git keeps false
 
 -- Wizard
 Config.WIZARD_SPEED = 16
