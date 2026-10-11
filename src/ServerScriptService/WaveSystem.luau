@@ -319,7 +319,7 @@ end
 function WaveSystem:restPhase(completedWave: number)
 	self.readyPlayers = {}
 
-	local restEndTime = tick() + Config.WAVE_REST_TIME
+	local restEndTime = tick() + (Config.TEST_MODE and 0.5 or Config.WAVE_REST_TIME)
 	Remotes.UpdateHUD:FireAllClients({
 		restPhase = true,
 		restTime = Config.WAVE_REST_TIME,
