@@ -295,7 +295,8 @@ local function onPlayerAdded(player: Player)
 	fragmentDropper:setElementBias(player, "fire")
 
 	-- Create wizard character
-	player.CharacterAdded:Connect(function(character)
+	local function onCharacterAdded(character: Model)
+	
 		character:SetAttribute("IsWizard", true)
 		-- Respawned/rejoined: fresh HP (attribute doesn't reset on death by itself)
 		player:SetAttribute("HP", player:GetAttribute("MaxHP") or 100)
@@ -320,7 +321,12 @@ local function onPlayerAdded(player: Player)
 		staffWeld.Parent = staff
 
 		staff.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(1.5, 0, 0)
-	end)
+	end
+
+	player.CharacterAdded:Connect(onCharacterAdded)
+	if player.Character then
+		onCharacterAdded(player.Character)
+	end
 
 	-- Handle heal request
 	Remotes.HealWithCrystals.OnServerEvent:Connect(function(requestingPlayer)
@@ -396,6 +402,10 @@ end
 Players.PlayerRemoving:Connect(function(player)
 	dataManager:onPlayerRemoving(player)
 end)
+
+-- Handle joins after startup (was missing: only the "already in game" loop ran,
+-- so players joining after script start were never registered as defenders)
+Players.PlayerAdded:Connect(onPlayerAdded)
 
 -- Handle players already in game
 for _, player in Players:GetPlayers() do
