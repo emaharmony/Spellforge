@@ -461,6 +461,11 @@ task.spawn(function()
 						pd.spell = crafted
 						plr:SetAttribute("EquippedSpell", crafted.id)
 					end
+					-- Model a returning player who cleared once: Max HP 120
+					-- (the Phase 3 first-clear unlock), refilled.
+					plr:SetAttribute("MaxHP", 120)
+					plr:SetAttribute("HP", 120)
+					Remotes.UpdateHUD:FireClient(plr, { hp = 120, maxHP = 120 })
 				end
 			end
 		end
