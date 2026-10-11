@@ -20,11 +20,21 @@
 
 Prototype scope *excludes*: manual casting (M2), spell equipping/swap UI, co-op lobby, ranged enemy AI, audio, art polish, monetization. Those come after the prototype proves the loop is fun.
 
+### Replayability pillar (locked 2026-10-11 design session)
+After the prototype loop is proven, Spellforge scales into a deep collection game:
+- **12 elements** (6 today + water/wind/earth/metal, then light/void) — 288+ distinct same-element spells
+- **Universal 4-tier power ladder: Spark → Blast → SuperNova → Megaton** (×1.0 / ×1.5 / ×2.5 / ×4.0) — replaces per-element power names
+- **Rarity 2.0:** Mythic + Prismatic chase tiers, earned-only stacking Luck stat, displayed odds, 4-slot rarity contribution to spell tier (every fragment drop matters, dupes upgrade builds)
+
 ### Success criteria (all must hold)
 - A new player can complete a full 10-wave run unassisted (survive, craft, win)
 - Two consecutive playtests with zero server errors or soft-locks
 - No economy exploit: fragments cannot be duplicated or crafted without owning them
 - Progress survives rejoin (crystals, fragments, spells, best wave)
+
+Post-prototype (Phases 7–10) success criteria:
+- 288+ distinct same-element spells; every fragment rarity contributes to spell tier (no dead drops)
+- A chase tier players grind for across many runs, with visible odds and earned luck only (no Robux luck — Roblox paid-random-item odds compliance by design)
 
 ---
 
@@ -41,8 +51,12 @@ Six phases from current state to prototype-done. Each phase = one branch = one P
 | **Phase 4 — Combat feel** | `feat/spell-vfx` | SpellFired projectile VFX (color by spell) | ⚪ queued |
 | **Phase 5 — Onboarding** | `feat/onboarding-glue` | Boss warning, first-join instructions | ⚪ queued |
 | **Phase 6 — Balance & playtest** | `balance/playtest` | PT-001/002/003 runs, evidence-based tuning | ⚪ queued |
+| **Phase 7 — Power ladder v2** | `feat/power-ladder-v2` | Universal Spark/Blast/SuperNova/Megaton tiers + Megaton (×4.0), old-ID compat map | ⚪ queued |
+| **Phase 8 — Element Wave A** | `feat/elements-wave-a` | Water / Wind / Earth / Metal (core, 3 shapes, 4 powers, 2 modifiers each) | ⚪ queued |
+| **Phase 9 — Rarity 2.0** | `feat/rarity-v2` | Mythic+Prismatic, earned Luck stat + displayed odds, 4-slot rarity → spell tier badges | ⚪ queued |
+| **Phase 10 — Element Wave B** | `feat/elements-wave-b` | Light / Void (blind+radiance, decay+singularity mechanics) | ⚪ queued |
 
-**Dependency chain:** PR #1 → #2 → #3 (strict); Phase 4 may parallel #3; Phase 5 after #3; Phase 6 last (needs everything).
+**Dependency chain:** PR #1 → #2 → #3 (strict); Phase 4 may parallel #3; Phase 5 after #3; Phase 6 gates the prototype milestone. **Phases 7–10 (content expansion) start only after Phase 6** — the loop must be fun before we scale it. Phase 7 before 8 (new elements use the new ladder); 9 after 7 (rarity touches all fragments); 10 last (needs 9's mechanics for light/void effects).
 
 ### Phase exit criteria
 - **Phase 1:** full solo run to victory; Play Again restarts clean; defeat path also restarts clean
@@ -50,7 +64,11 @@ Six phases from current state to prototype-done. Each phase = one branch = one P
 - **Phase 3:** rejoin restores spells/bestWave; Max HP upgrade buy works once-and-only-once
 - **Phase 4:** combat is visually readable without logs
 - **Phase 5:** new player completes first run unassisted
-- **Phase 6:** two consecutive clean full runs (PT-001/002 + any 2 of PT-003)
+- **Phase 6:** two consecutive clean full runs (PT-001/002 + any 2 of PT-003) — **prototype milestone reached; content expansion unlocked**
+- **Phase 7:** all old power IDs map cleanly (no lost player fragments); Megaton craftable and visibly strongest
+- **Phase 8:** 4 new elements fully craftable; each damage type + modifier distinguishable in play; fragment pool ≥ 100
+- **Phase 9:** Mythic/Prismatic drop with displayed odds; Luck stacking visible in UI; a Prismatic spell shows a tier badge and hits harder
+- **Phase 10:** Light/Void craftable with their unique mechanics live
 
 ---
 

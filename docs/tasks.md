@@ -57,6 +57,25 @@
 
 ---
 
+## Content Expansion (Phases 7–10 — locked 2026-10-11, start only after Phase 6 milestone)
+
+| ID | Phase | Task | Notes |
+|----|-------|------|-------|
+| SF-200 | Phase 7 | Power ladder v2: rename to Spark/Blast/SuperNova/Megaton, add Megaton ×4.0 tier | old IDs → new IDs compat map; nobody loses fragments |
+| SF-201 | Phase 7 | Migrate FragmentData.Powers to universal 4-tier ladder (all 12 elements) | powers become element-agnostic names |
+| SF-210 | Phase 8 | Water element: core + 3 shapes + 4 powers + 2 modifiers, soak/slow damage type | tidal surge modifier |
+| SF-211 | Phase 8 | Wind element: swirl, gale (knockback) | reposition enemies |
+| SF-212 | Phase 8 | Earth element: stagger, quake (AoE stun) | |
+| SF-213 | Phase 8 | Metal element: shred (armor-pierce %), magnetize (pull) | |
+| SF-214 | Phase 8 | ElementData/FragmentData data-entry + crafting UI renders new elements | pool ≥ 100 frags |
+| SF-220 | Phase 9 | Rarity 2.0: Mythic (×4.5, ~1/12k) + Prismatic (×6.0, ~1/250k) fragments | unique VFX colors, collection badges |
+| SF-221 | Phase 9 | Luck stat: victory streaks +0.1× (capped), Fortune Charm consumable, co-op bonus | earned-only; displayed odds |
+| SF-222 | Phase 9 | 4-slot rarity contribution → spell tier badge (Common → Prismatic) | dupes upgrade builds |
+| SF-230 | Phase 10 | Light element: blind (miss chance), radiance (heal on kill) | |
+| SF-231 | Phase 10 | Void element: decay (max-HP damage), singularity (pull + DoT) | tank/boss counter |
+
+---
+
 ## Blockers
 
 **None active.** Watch items:
