@@ -1,26 +1,81 @@
 # Spellforge — Task Tracker
 
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-10-10
+**Roadmap:** [GOAL_AND_ROADMAP.md](GOAL_AND_ROADMAP.md) — all tasks below belong to a phase there
+**Old entries (SF-001…004, May–Jun):** preserved at the bottom as [Archive](#archive) — SF-004's balance pass was superseded by the prototype plan's Phase 6
 
-## Completed
+---
+
+## Active Work
+
+| ID | Phase | Task | Branch / PR | Status |
+|----|-------|------|-------------|--------|
+| SF-101 | PR#1 | Fix 7 dead-wire bugs closing the game loop | `feature/simple-gameloop` → [PR #1](https://github.com/emaharmony/Spellforge/pull/1) | 🔶 in review (draft) |
+| SF-102 | Phase 1 | Run integrity: results screen + Play Again + restart-safe systems | `fix/run-integrity` → [PR #2](https://github.com/emaharmony/Spellforge/pull/2) | 🔶 in review |
+| SF-103 | Phase 2 | Economy server-truth: inventory, craft gate, pack integrity, sync, fragment persistence | `feat/economy-server-truth` → [PR #3](https://github.com/emaharmony/Spellforge/pull/3) | 🔶 in review |
+
+### Merge order: PR #1 → #2 → #3 (each stacks on the previous)
+
+---
+
+## Upcoming (queued in roadmap order)
+
+| ID | Phase | Task | Notes |
+|----|-------|------|-------|
+| SF-110 | Phase 3 | Persist spells + bestWave + totalKills (DataStore) | crystals + fragments already persist via PR #3 snapshot |
+| SF-111 | Phase 3 | Max HP upgrade shop entry (rest phase) | `maxHPUnlocked` flag exists, unwired |
+| SF-112 | Phase 3 | Playtest: persistence round-trip (rejoin restores all) | exit gate |
+| SF-120 | Phase 4 | SpellFired projectile VFX client listener | one small file; color from spell |
+| SF-130 | Phase 5 | BossWarning banner on wave 10 | remote exists, never fired |
+| SF-131 | Phase 5 | First-join instruction card | "Survive 10 waves. Craft between waves. Press C." |
+| SF-132 | Phase 5 | Confirm/implement crafting keybind toggle | verify key exists |
+| SF-140 | Phase 6 | PT-001 solo full run | notes → docs/playtest/PT-001.md |
+| SF-141 | Phase 6 | PT-002 duo full run | co-op split + revive visible |
+| SF-142 | Phase 6 | PT-003 boss speedrun | verify boss pacing fun-not-tedious |
+| SF-143 | Phase 6 | Balance tuning from PT evidence | wave counts, HP, pack costs |
+
+### Playing next (playtest gate for current PRs)
+| ID | Phase | Task | Notes |
+|----|-------|------|-------|
+| SF-100 | PR#1–3 | Studio playtest of merged stack | one session validates all three checklists |
+
+---
+
+## Done
+
+| ID | Date | Phase | Task | Result | Evidence |
+|----|------|-------|------|--------|----------|
+| SF-090 | 2026-10-10 | PR#1 | Gameloop audit + fix branch created | 7 dead-wire bugs found & fixed | commit dc0d43e |
+| SF-091 | 2026-10-10 | PR#1 | Repo branch structure mapped (default branch fossil) | documented; PRs target master | audit notes |
+| SF-092 | 2026-10-10 | Plan | PROTOTYPE_PLAN.md written (6 phases, criteria, gaps G1–G9) | committed in PR #1 | commit dccd30d |
+| SF-093 | 2026-10-10 | Phase 1 | Run integrity implementation | 149+/23- across 4 files + new RunResultsUI | PR #2 |
+| SF-094 | 2026-10-10 | Phase 1 | Self-review fixes (5 defects caught pre-commit) | inflated kills, solo-death results screen, wave stats, stale cooldowns, post-defeat wave fire | PR #2 review notes |
+| SF-095 | 2026-10-10 | Phase 2 | Server-truth inventory + InventorySync | FragmentInventory authoritative, auto-sync | PR #3 |
+| SF-096 | 2026-10-10 | Phase 2 | AssembleSpell economy gate (validate + deduct + reject reasons) | crafting free rides end | PR #3 |
+| SF-097 | 2026-10-10 | Phase 2 | Shop integrity (generate-then-spend + ShopResult) | empty pack never eats crystals | PR #3 |
+| SF-098 | 2026-10-10 | Phase 2 | Fragment persistence + starter kit | DataStore round-trip + first-join grant | PR #3 |
+
+---
+
+## Blockers
+
+**None active.** Watch items:
+- ⏳ Studio playtest pending for PRs #1–#3 (Ema runs Studio; Mac mini can't — house known constraint SF-C1)
+- ⏳ Repo default branch is the fossil `feature/spellforge-m1-wave-defense` — suggest switching default to `master` post-merge
+- ⏳ PAT rotation reminder from system-sweep session (not Spellforge-scoped)
+
+---
+
+## Archive
 
 | ID | Date | Task | Result |
 |----|------|------|--------|
 | SF-001 | 2026-05-08 | Core systems built | 21 files, forge + defend |
 | SF-002 | 2026-05-08 | Git synced | Mac + Windows + GitHub |
 | SF-003 | 2026-05-08 | Balance v2 branch | feature/balance-v2 |
+| SF-004 | ~2026-06-05 | Balance pass | SUPERSEDED → Phase 6 of prototype plan |
 
-## In Progress
-
-| ID | Started | Task | Status | Blocker |
-|----|---------|------|--------|---------|
-| SF-004 | 2026-05-08 | Balance pass | On hold | Needs playtesting |
-
-## Upcoming
-
-| ID | Priority | Task | Notes |
-|----|----------|------|-------|
-| SF-005 | High | Coop multiplayer polish | Core social feature |
-| SF-006 | High | More enemy types | Content depth |
-| SF-007 | Medium | Audio/VFX | Polish phase |
-| SF-008 | Medium | Game passes | Monetization |
+### Constraints
+- **SF-C1** Roblox Studio + playtests run on Ema's machine only; agent validates by code review + static checks
+- **SF-C2** Playtest notes mandatory per run → `docs/playtest/PT-NNN.md`
+- **SF-C3** House rule: every feature tested before moving to the next
