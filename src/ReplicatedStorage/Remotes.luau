@@ -47,5 +47,7 @@ Remotes.BossWarning = ensureRemote("BossWarning", "RemoteEvent")
 Remotes.ElementalCombo = ensureRemote("ElementalCombo", "RemoteEvent")
 Remotes.PlayAgain = ensureRemote("PlayAgain", "RemoteEvent")
 Remotes.InventorySync = ensureRemote("InventorySync", "RemoteEvent")
+Remotes.BuyMaxHP = ensureRemote("BuyMaxHP", "RemoteEvent")
+Remotes.MaxHPChanged = ensureRemote("MaxHPChanged", "RemoteEvent")
 
 return Remotes

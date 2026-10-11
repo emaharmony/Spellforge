@@ -210,6 +210,44 @@ local function createUI()
 		Remotes.HealWithCrystals:FireServer()
 	end)
 
+	-- Max HP upgrade button (Phase 3 SF-111) — one-time purchase
+	local maxHPBtn = Instance.new("TextButton")
+	maxHPBtn.Name = "MaxHPButton"
+	maxHPBtn.Size = UDim2.new(1, 0, 0, 36)
+	maxHPBtn.BackgroundColor3 = COLORS.gold
+	maxHPBtn.Text = "🛡️ Max HP 120 (150💎) — one-time"
+	maxHPBtn.Font = FONT_BODY
+	maxHPBtn.TextSize = TEXT_BODY
+	maxHPBtn.TextColor3 = Color3.fromRGB(30, 30, 50)
+	maxHPBtn.BorderSizePixel = 0
+	maxHPBtn.LayoutOrder = 5
+	maxHPBtn.Parent = shopFrame
+
+	local maxHPCorner = Instance.new("UICorner")
+	maxHPCorner.CornerRadius = UDim.new(0, 6)
+	maxHPCorner.Parent = maxHPBtn
+
+	maxHPBtn.Activated:Connect(function()
+		Remotes.BuyMaxHP:FireServer()
+	end)
+
+	-- Already unlocked → button shows purchased state
+	if (player:GetAttribute("MaxHP") or 100) >= 120 then
+		maxHPBtn.Text = "🛡️ Max HP 120 — owned"
+		maxHPBtn.BackgroundColor3 = COLORS.surface
+		maxHPBtn.TextColor3 = COLORS.textMuted
+		maxHPBtn.Active = false
+	end
+
+	Remotes.MaxHPChanged.OnClientEvent:Connect(function(unlocked: boolean)
+		if unlocked then
+			maxHPBtn.Text = "🛡️ Max HP 120 — owned"
+			maxHPBtn.BackgroundColor3 = COLORS.surface
+			maxHPBtn.TextColor3 = COLORS.textMuted
+			maxHPBtn.Active = false
+		end
+	end)
+
 	-- Open Crafting button
 	local craftBtn = Instance.new("TextButton")
 	craftBtn.Name = "CraftButton"
@@ -220,7 +258,7 @@ local function createUI()
 	craftBtn.TextSize = TEXT_HEADER
 	craftBtn.TextColor3 = COLORS.text
 	craftBtn.BorderSizePixel = 0
-	craftBtn.LayoutOrder = 5
+	craftBtn.LayoutOrder = 6
 	craftBtn.Parent = panel
 
 	local craftCorner = Instance.new("UICorner")
@@ -244,7 +282,7 @@ local function createUI()
 	readyBtn.TextSize = TEXT_TITLE
 	readyBtn.TextColor3 = COLORS.text
 	readyBtn.BorderSizePixel = 0
-	readyBtn.LayoutOrder = 6
+	readyBtn.LayoutOrder = 7
 	readyBtn.Parent = panel
 
 	local readyCorner = Instance.new("UICorner")
