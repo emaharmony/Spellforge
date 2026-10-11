@@ -188,7 +188,13 @@ function WaveSystem:runWaves()
 			end
 		end
 
-		-- Notify wave complete
+		-- Notify wave complete — but never past a run-level end: the death
+		-- path fires GameOut-of-band; a WaveComplete/restPhase landing after
+		-- it re-opens panels over the results screen (PT-003 race).
+		if not self.gameActive then
+			return
+		end
+
 		Remotes.WaveComplete:FireAllClients(wave, composition.description)
 
 		-- Rest phase (crafting, shop, ready-up)
