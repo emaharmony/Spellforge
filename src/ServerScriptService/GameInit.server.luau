@@ -447,10 +447,12 @@ end
 task.spawn(function()
 	while true do
 		if Config.TEST_MODE and not testStimApplied then
-			testStimApplied = true
+			local grantedAny = false
 			for _, plr in Players:GetPlayers() do
 				local pd = waveSystem.players[plr.UserId]
 				if pd then
+					testStimApplied = true -- latch only on a real grant
+					grantedAny = true
 					local crafted = SpellAssembler.assemble({
 						"fire_element",
 						"fire_shape_nova",
@@ -467,6 +469,9 @@ task.spawn(function()
 					plr:SetAttribute("HP", 120)
 					Remotes.UpdateHUD:FireClient(plr, { hp = 120, maxHP = 120 })
 				end
+			end
+			if grantedAny then
+				print("[Spellforge] TEST_MODE fixture applied (veteran kit)")
 			end
 		end
 		task.wait(1)
