@@ -100,13 +100,16 @@ Remotes.GameOver.OnClientEvent:Connect(function(reason: string, stats: any)
 	end
 	stats = stats or {}
 
-	-- SF-140b: run ended — close the rest/crafting panels so they don't
-	-- overlap the results screen (PT-001: Wave Complete + Defeated both up)
+	-- SF-140b: run ended — close ALL rest/crafting panels so they don't
+	-- overlap the results screen (PT-001: Wave Complete + Defeated both up).
+	-- GetAll matching instances: harness restarts can leave stale clones in
+	-- PlayerGui; a single FindFirstChild misses them.
 	local playerGui = script.Parent
 	for _, name in { "WaveRestUI", "SpellforgeCrafting" } do
-		local gui = playerGui:FindFirstChild(name, true)
-		if gui and gui:IsA("ScreenGui") then
-			gui.Enabled = false
+		for _, gui in playerGui:GetChildren() do
+			if gui.Name == name and gui:IsA("ScreenGui") then
+				gui.Enabled = false
+			end
 		end
 	end
 

@@ -100,5 +100,11 @@ body.Parent = card
 Remotes.WaveComplete.OnClientEvent:Connect(function(wave)
 	if wave == 1 then
 		joinGui:Destroy()
+		-- Harness restarts can leave stale welcome cards from prior sessions
+		for _, other in playerGui:GetChildren() do
+			if other.Name == "OnboardingCard" and other ~= joinGui then
+				other:Destroy()
+			end
+		end
 	end
 end)
