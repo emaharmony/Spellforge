@@ -71,6 +71,7 @@ function EnemySpawner:spawnEnemy(enemyType: string, targetPosition: Vector3): In
     enemy:SetAttribute("AttackRange", data.attackRange)
     enemy:SetAttribute("AttackCooldown", data.attackCooldown)
     enemy:SetAttribute("CrystalDrop", data.crystalDrop)
+    enemy:SetAttribute("Rarity", data.rarity or "common")
     enemy:SetAttribute("EnemyType", enemyType)
     if data.isBoss then
         enemy:SetAttribute("IsBoss", true)
