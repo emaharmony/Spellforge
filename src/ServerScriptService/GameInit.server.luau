@@ -225,6 +225,21 @@ local function startRun()
 	combatEngine:resetRun()
 	-- Fresh run = everyone at full health (survivors keep crystals/fragments)
 	for _, plr in Players:GetPlayers() do
+		-- TEST_MODE fixture also applies at run start: covers players who joined
+		-- before the flag was flipped mid-session (harness timing), and keeps
+		-- every run consistent once the flag is on.
+		if Config.TEST_MODE then
+			local crafted = SpellAssembler.assemble({
+				"fire_element",
+				"fire_shape_nova",
+				"fire_power_supernova",
+				"fire_mod_split",
+			})
+			if crafted and waveSystem.players[plr.UserId] then
+				waveSystem.players[plr.UserId].spell = crafted
+				plr:SetAttribute("EquippedSpell", crafted.id)
+			end
+		end
 		local maxHP = plr:GetAttribute("MaxHP") or 100
 		plr:SetAttribute("HP", maxHP)
 		local humanoid = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
