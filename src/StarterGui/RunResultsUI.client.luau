@@ -99,11 +99,15 @@ Remotes.GameOver.OnClientEvent:Connect(function(reason: string, stats: any)
 		return
 	end
 	stats = stats or {}
+	local isNewBest = stats.victory == true and stats.isBest == true
 	local waveReached = tostring(stats.wave or "?")
 	if reason == "victory" then
 		titleLabel.Text = "🎉 Victory!"
 		titleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 		subtitleLabel.Text = "all " .. tostring(stats.maxWaves or 10) .. " waves cleared"
+		if isNewBest then
+			subtitleLabel.Text = "first full clear — Max HP 120 unlocked!"
+		end
 		stroke.Color = Color3.fromRGB(255, 215, 0)
 	else
 		titleLabel.Text = "💀 Defeated"

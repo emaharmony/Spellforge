@@ -1,6 +1,6 @@
 # Spellforge — Task Tracker
 
-**Last Updated:** 2026-10-10
+**Last Updated:** 2026-10-11
 **Roadmap:** [GOAL_AND_ROADMAP.md](GOAL_AND_ROADMAP.md) — all tasks below belong to a phase there
 **Old entries (SF-001…004, May–Jun):** preserved at the bottom as [Archive](#archive) — SF-004's balance pass was superseded by the prototype plan's Phase 6
 
@@ -10,9 +10,8 @@
 
 | ID | Phase | Task | Branch / PR | Status |
 |----|-------|------|-------------|--------|
-| SF-101 | PR#1 | Fix 7 dead-wire bugs closing the game loop | `feature/simple-gameloop` → [PR #1](https://github.com/emaharmony/Spellforge/pull/1) | 🔶 in review (draft) |
-| SF-102 | Phase 1 | Run integrity: results screen + Play Again + restart-safe systems | `fix/run-integrity` → [PR #2](https://github.com/emaharmony/Spellforge/pull/2) | 🔶 in review |
-| SF-103 | Phase 2 | Economy server-truth: inventory, craft gate, pack integrity, sync, fragment persistence | `feat/economy-server-truth` → [PR #3](https://github.com/emaharmony/Spellforge/pull/3) | 🔶 in review |
+| SF-110 | Phase 3 | Meta persistence: run stats wire + spell recipe save/re-equip | `feat/meta-persistence` → [PR #4](https://github.com/emaharmony/Spellforge/pull/4) | 🔶 in review |
+| SF-111 | Phase 3 | Max HP upgrade (150💎 one-time, rest shop) | `feat/meta-persistence` → [PR #4](https://github.com/emaharmony/Spellforge/pull/4) | 🔶 in review |
 
 ### Merge order: PR #1 → #2 → #3 (each stacks on the previous)
 
@@ -22,9 +21,7 @@
 
 | ID | Phase | Task | Notes |
 |----|-------|------|-------|
-| SF-110 | Phase 3 | Persist spells + bestWave + totalKills (DataStore) | crystals + fragments already persist via PR #3 snapshot |
-| SF-111 | Phase 3 | Max HP upgrade shop entry (rest phase) | `maxHPUnlocked` flag exists, unwired |
-| SF-112 | Phase 3 | Playtest: persistence round-trip (rejoin restores all) | exit gate |
+| SF-112 | Phase 3 | Playtest: persistence round-trip (rejoin restores all) | exit gate — validates PR #4 checklist + full 1–3 stack |
 | SF-120 | Phase 4 | SpellFired projectile VFX client listener | one small file; color from spell |
 | SF-130 | Phase 5 | BossWarning banner on wave 10 | remote exists, never fired |
 | SF-131 | Phase 5 | First-join instruction card | "Survive 10 waves. Craft between waves. Press C." |
@@ -54,6 +51,11 @@
 | SF-096 | 2026-10-10 | Phase 2 | AssembleSpell economy gate (validate + deduct + reject reasons) | crafting free rides end | PR #3 |
 | SF-097 | 2026-10-10 | Phase 2 | Shop integrity (generate-then-spend + ShopResult) | empty pack never eats crystals | PR #3 |
 | SF-098 | 2026-10-10 | Phase 2 | Fragment persistence + starter kit | DataStore round-trip + first-join grant | PR #3 |
+| SF-101 | 2026-10-11 | PR#1 | Gameloop fix merged | 7 dead-wire bugs closed | PR #1 merged (e6f81e3) |
+| SF-102 | 2026-10-11 | Phase 1 | Run integrity merged | results screen, Play Again, restart-safe systems, kill credit | PR #2 merged (b9d3ba7) |
+| SF-103 | 2026-10-11 | Phase 2 | Economy server-truth merged | inventory gate, craft deduct, pack integrity, InventorySync | PR #3 merged (fbe0369) |
+| SF-110 | 2026-10-11 | Phase 3 | Meta persistence built | run stats wire (recordRunCompletion was dead code), spell recipe save + free rejoin re-equip, isBest unlock callout | PR #4 in review |
+| SF-111 | 2026-10-11 | Phase 3 | Max HP upgrade built | 150💎 one-time, BuyMaxHP remote, owned-state UI, failure reasons | PR #4 in review |
 
 ---
 

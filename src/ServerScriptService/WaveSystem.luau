@@ -19,6 +19,7 @@ function WaveSystem.new()
 	self.fragmentDropper = nil
 	self.crystalManager = nil
 	self.fragmentInventory = nil
+	self.dataManager = nil
 	self.waveThread = nil
 	self.runStats = nil -- populated in start(): { kills, crystalsEarned, startedAt }
 	self.readyPlayers = {} -- player id -> bool
@@ -26,13 +27,14 @@ function WaveSystem.new()
 	return self
 end
 
-function WaveSystem:setSystems(enemySpawner: any, combatEngine: any, spellAssembler: any, fragmentDropper: any, crystalManager: any, fragmentInventory: any)
+function WaveSystem:setSystems(enemySpawner: any, combatEngine: any, spellAssembler: any, fragmentDropper: any, crystalManager: any, fragmentInventory: any, dataManager: any)
 	self.enemySpawner = enemySpawner
 	self.combatEngine = combatEngine
 	self.spellAssembler = spellAssembler
 	self.fragmentDropper = fragmentDropper
 	self.crystalManager = crystalManager
 	self.fragmentInventory = fragmentInventory
+	self.dataManager = dataManager
 end
 
 function WaveSystem:addPlayer(player: Player, spell: any)
@@ -201,12 +203,34 @@ end
 
 -- Broadcast end-of-run with stats and reset run state so start() can run again.
 function WaveSystem:announceGameOver(reason: string)
+	local victory = reason == "victory"
+	local wavesCompleted = victory and self.maxWaves or math.max(self.currentWave - 1, 0)
+	local kills = self.runStats and self.runStats.kills or 0
+
+	-- Phase 3 SF-110: persist run stats FIRST so isBest is known before the
+	-- results screen renders (first full clear announces the Max HP unlock).
+	local isFirstFullClear = false
+	if self.dataManager then
+		for _, data in self.players do
+			if data.player and data.player.Parent then
+				local prevBest = self.dataManager:getBestWave(data.player)
+				self.dataManager:recordRunCompletion(data.player, wavesCompleted, victory, kills)
+				if victory and wavesCompleted > prevBest then
+					isFirstFullClear = true
+				end
+			end
+		end
+	end
+
 	Remotes.GameOver:FireAllClients(reason, {
 		wave = math.min(self.currentWave, self.maxWaves),
 		maxWaves = self.maxWaves,
-		kills = self.runStats and self.runStats.kills or 0,
+		kills = kills,
 		crystalsEarned = self.runStats and self.runStats.crystalsEarned or 0,
+		victory = victory,
+		isBest = isFirstFullClear,
 	})
+
 	self.gameActive = false
 	self.waveActive = false
 end

@@ -29,7 +29,7 @@ local coopManager = CoopManager.new()
 local dataManager = DataManager.new()
 
 -- Wire systems together
-waveSystem:setSystems(enemySpawner, combatEngine, SpellAssembler, fragmentDropper, crystalManager, fragmentInventory)
+waveSystem:setSystems(enemySpawner, combatEngine, SpellAssembler, fragmentDropper, crystalManager, fragmentInventory, dataManager)
 combatEngine:setWaveSystem(waveSystem)
 crystalManager:setFragmentDropper(fragmentDropper)
 crystalManager:setFragmentInventory(fragmentInventory)
@@ -257,11 +257,22 @@ local function onPlayerAdded(player: Player)
 	player:SetAttribute("MaxHP", maxHP)
 	player:SetAttribute("Crystals", data.crystals or 0)
 
-	-- Create starter spell
-	local starterSpell = SpellAssembler.createStarterSpell()
-	if starterSpell then
-		player:SetAttribute("EquippedSpell", "fire_bolt")
-		waveSystem:addPlayer(player, starterSpell)
+	-- Equip spell: saved recipe wins (rejoin restores the crafted spell,
+	-- re-assembled free of charge — fragments were already consumed), else starter.
+	local equippedSpell = nil
+	local savedRecipe = dataManager:getSavedSpell(player)
+	if savedRecipe then
+		local rebuilt = SpellAssembler.assemble(savedRecipe)
+		if rebuilt then
+			equippedSpell = rebuilt
+		end
+	end
+	if not equippedSpell then
+		equippedSpell = SpellAssembler.createStarterSpell()
+	end
+	if equippedSpell then
+		player:SetAttribute("EquippedSpell", equippedSpell.id)
+		waveSystem:addPlayer(player, equippedSpell)
 	end
 
 	-- Seed server inventory from persisted data; new players get the starter kit
@@ -325,6 +336,27 @@ local function onPlayerAdded(player: Player)
 		end
 	end)
 
+	-- Handle Max HP upgrade purchase (Phase 3 SF-111)
+	Remotes.BuyMaxHP.OnServerEvent:Connect(function(requestingPlayer)
+		if requestingPlayer == player then
+			local ok, reason = dataManager:buyMaxHPUpgrade(player)
+			Remotes.ShopResult:FireClient(player, ok, {
+				item = "max_hp",
+				cost = 150,
+				reason = reason,
+			})
+			if ok then
+				-- Refill to the new max so the purchase feels immediate
+				local newMax = player:GetAttribute("MaxHP") or 120
+				player:SetAttribute("HP", newMax)
+				Remotes.UpdateHUD:FireClient(player, {
+					hp = newMax,
+					maxHP = newMax,
+				})
+			end
+		end
+	end)
+
 	-- Handle spell assembly — the economy gate:validate ownership, then deduct
 	Remotes.AssembleSpell.OnServerEvent:Connect(function(requestingPlayer, fragmentIds)
 		if requestingPlayer ~= player or typeof(fragmentIds) ~= "table" then return end
@@ -351,6 +383,9 @@ local function onPlayerAdded(player: Player)
 		player:SetAttribute("EquippedSpell", spell.id)
 		waveSystem.players[player.UserId].spell = spell
 		Remotes.SpellAssembled:FireClient(player, spell)
+
+		-- Phase 3 SF-110: persist the equipped spell's recipe for rejoin restore
+		dataManager:saveEquippedSpell(player, spell)
 
 		-- Update element bias
 		coopManager:setPlayerElement(player, spell.element)
