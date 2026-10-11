@@ -11,6 +11,7 @@
 | ID | Phase | Task | Branch / PR | Status |
 |----|-------|------|-------------|--------|
 | SF-115 | Phase 6 | Test harness: Studio MCP smoke pipeline + 3 harness-caught fixes | `fix/datastore-playmode-fallback` → [PR #5](https://github.com/emaharmony/Spellforge/pull/5) | 🔶 in review |
+| SF-120 | Phase 4 | SpellFired VFX: streak + impact burst, element-colored | `feat/spell-vfx` → [PR #6](https://github.com/emaharmony/Spellforge/pull/6) | 🔶 in review |
 
 ### Merge order: PR #1 → #2 → #3 (each stacks on the previous)
 
