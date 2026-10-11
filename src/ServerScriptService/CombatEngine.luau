@@ -10,7 +10,17 @@ function CombatEngine.new()
     local self = setmetatable({}, CombatEngine)
     self.activeEffects = {} -- enemy id -> { effect, endTime }
     self.castCooldowns = {} -- player id -> lastCastTime
+    self.waveSystem = nil -- set by GameInit: kill credit routes through co-op split + run stats
     return self
+end
+
+function CombatEngine:setWaveSystem(waveSystem: any)
+    self.waveSystem = waveSystem
+end
+
+function CombatEngine:resetRun()
+    self.activeEffects = {}
+    self.castCooldowns = {}
 end
 
 function CombatEngine:canCast(player: Player): boolean
@@ -37,7 +47,7 @@ function CombatEngine:castSpell(player: Player, spell: any, targets: { Instance 
     Remotes.SpellFired:FireAllClients(player, spell.computed)
 end
 
-function CombatEngine:applyDamage(enemy: Instance, damage: number, _sourcePlayer: Player)
+function CombatEngine:applyDamage(enemy: Instance, damage: number, sourcePlayer: Player?)
     local currentHP = enemy:GetAttribute("HP") or 0
     local newHP = math.max(0, currentHP - damage)
     enemy:SetAttribute("HP", newHP)
@@ -45,7 +55,7 @@ function CombatEngine:applyDamage(enemy: Instance, damage: number, _sourcePlayer
     Remotes.EnemyDamaged:FireAllClients(enemy, damage, newHP)
 
     if newHP <= 0 then
-        self:onEnemyDeath(enemy)
+        self:onEnemyDeath(enemy, sourcePlayer)
     end
 end
 
@@ -104,7 +114,7 @@ function CombatEngine:applyEffect(enemy: Instance, effect: string?, damageType: 
                     local hp = enemy:GetAttribute("HP") - dotDamage
                     enemy:SetAttribute("HP", math.max(0, hp))
                     if hp <= 0 then
-                        self:onEnemyDeath(enemy)
+                        self:onEnemyDeath(enemy, nil)
                     end
                 end
             end)
@@ -112,13 +122,11 @@ function CombatEngine:applyEffect(enemy: Instance, effect: string?, damageType: 
     end
 end
 
-function CombatEngine:onEnemyDeath(enemy: Instance)
-    -- Award crystals to all players
-    local Players = game:GetService("Players")
-    local crystalReward = enemy:GetAttribute("CrystalDrop") or 1
-    for _, player in Players:GetPlayers() do
-        local currentCrystals = player:GetAttribute("Crystals") or 0
-        player:SetAttribute("Crystals", currentCrystals + crystalReward)
+function CombatEngine:onEnemyDeath(enemy: Instance, killedBy: Player?)
+    -- Route rewards through WaveSystem when wired (co-op 70/30 split + run stats);
+    -- wave thread handles creditless deaths (DoT ticks pass no killer).
+    if self.waveSystem and killedBy then
+        self.waveSystem:onEnemyDeath(enemy, killedBy)
     end
 
     -- Remove enemy after brief delay

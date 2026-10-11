@@ -30,6 +30,7 @@ local dataManager = DataManager.new()
 
 -- Wire systems together
 waveSystem:setSystems(enemySpawner, combatEngine, SpellAssembler, fragmentDropper, crystalManager)
+combatEngine:setWaveSystem(waveSystem)
 crystalManager:setFragmentDropper(fragmentDropper)
 crystalManager:setupRemotes()
 
@@ -78,9 +79,13 @@ task.spawn(function()
 	end
 end)
 
+-- Attack loops are per-run: each restarts itself while the run is active/ending.
+-- Threads are tracked so a reset can cancel stragglers mid-restart.
+local loopThreads = {}
+
 -- Enemy attack loop — enemies damage wizards they reach
 local function startEnemyAttackLoop()
-	task.spawn(function()
+	loopThreads.enemy = task.spawn(function()
 		while waveSystem:isGameActive() do
 			local alive = enemySpawner:getAliveEnemies()
 			for _, player in Players:GetPlayers() do
@@ -115,7 +120,11 @@ local function startEnemyAttackLoop()
 								})
 
 								if newHP <= 0 then
-									-- Player died — notify for co-op revive
+									-- Player died — drop the body (respawn in ~5s) + notify
+									local humanoid = wizard and wizard:FindFirstChildWhichIsA("Humanoid")
+									if humanoid and humanoid.Health > 0 then
+										humanoid.Health = 0
+									end
 									Remotes.GameOver:FireClient(player, "died_waiting_revive")
 								end
 							end
@@ -133,7 +142,7 @@ end
 -- waves could never complete. Each wizard periodically auto-targets the
 -- nearest enemy in spell range and casts. Manual casting is M2.
 local function startWizardAttackLoop()
-	task.spawn(function()
+	loopThreads.wizard = task.spawn(function()
 		while waveSystem:isGameActive() do
 			for _, player in Players:GetPlayers() do
 				local playerData = waveSystem.players[player.UserId]
@@ -152,7 +161,7 @@ end
 
 -- Boss special attack loop
 local function startBossAttackLoop()
-	task.spawn(function()
+	loopThreads.boss = task.spawn(function()
 		while waveSystem:isGameActive() do
 			local boss = enemySpawner:getBoss()
 			if boss and boss.Parent then
@@ -180,6 +189,59 @@ local function startBossAttackLoop()
 	end)
 end
 
+-- Arena walls: keep wizards and enemies on the platform (Phase 1 run integrity)
+do
+	local half = Config.PLATFORM_SIZE / 2
+	local wallThickness = 2
+	local wallHeight = 24
+	for i, size in {
+		Vector3.new(Config.PLATFORM_SIZE + wallThickness * 2, wallHeight, wallThickness), -- north/south
+		Vector3.new(wallThickness, wallHeight, Config.PLATFORM_SIZE + wallThickness * 2), -- east/west
+	} do
+		for sign = -1, 1, 2 do
+			local wall = Instance.new("Part")
+			wall.Name = "ArenaWall"
+			wall.Size = size
+			wall.Anchored = true
+			wall.Transparency = 1
+			-- invisible but solid; CanCollide defaults true
+			if i == 1 then
+				wall.Position = Vector3.new(0, wallHeight / 2, sign * (half + wallThickness / 2))
+			else
+				wall.Position = Vector3.new(sign * (half + wallThickness / 2), wallHeight / 2, 0)
+			end
+			wall.Parent = workspace
+		end
+	end
+end
+
+-- Run restart (Phase 1): PlayAgain → full teardown → fresh run
+local function startRun()
+	waveSystem:reset()
+	combatEngine:resetRun()
+	-- Fresh run = everyone at full health (survivors keep crystals/fragments)
+	for _, plr in Players:GetPlayers() do
+		local maxHP = plr:GetAttribute("MaxHP") or 100
+		plr:SetAttribute("HP", maxHP)
+		local humanoid = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
+		if humanoid and humanoid.Health <= 0 then
+			plr:LoadCharacter() -- regenerate standing wizards for the new run
+		end
+	end
+	waveSystem:start()
+	startEnemyAttackLoop()
+	startWizardAttackLoop()
+	startBossAttackLoop()
+end
+
+Remotes.PlayAgain.OnServerEvent:Connect(function(player)
+	-- Any player can trigger restart once the run has ended (prototype co-op etiquette)
+	if not waveSystem:isGameActive() then
+		print("[Spellforge v2] Restart requested by", player.Name)
+		startRun()
+	end
+end)
+
 -- Setup player
 local function onPlayerAdded(player: Player)
 	-- Load persistent data
@@ -204,6 +266,12 @@ local function onPlayerAdded(player: Player)
 	-- Create wizard character
 	player.CharacterAdded:Connect(function(character)
 		character:SetAttribute("IsWizard", true)
+		-- Respawned/rejoined: fresh HP (attribute doesn't reset on death by itself)
+		player:SetAttribute("HP", player:GetAttribute("MaxHP") or 100)
+		Remotes.UpdateHUD:FireClient(player, {
+			hp = player:GetAttribute("MaxHP") or 100,
+			maxHP = player:GetAttribute("MaxHP") or 100,
+		})
 
 		-- Give wizard a staff (visual)
 		local staff = Instance.new("Part")
@@ -266,10 +334,7 @@ end
 -- Auto-start after a brief delay
 task.delay(5, function()
 	print("[Spellforge v2] Auto-starting defense!")
-	waveSystem:start()
-	startEnemyAttackLoop()
-	startWizardAttackLoop()
-	startBossAttackLoop()
+	startRun()
 	dataManager:startAutoSave()
 end)
 
