@@ -8,7 +8,6 @@ CombatEngine.__index = CombatEngine
 
 function CombatEngine.new()
     local self = setmetatable({}, CombatEngine)
-    self.activeEffects = {} -- enemy id -> { effect, endTime }
     self.castCooldowns = {} -- player id -> lastCastTime
     self.waveSystem = nil -- set by GameInit: kill credit routes through co-op split + run stats
     return self
@@ -19,7 +18,6 @@ function CombatEngine:setWaveSystem(waveSystem: any)
 end
 
 function CombatEngine:resetRun()
-    self.activeEffects = {}
     self.castCooldowns = {}
 end
 
@@ -69,8 +67,6 @@ function CombatEngine:applyEffect(enemy: Instance, effect: string?, damageType: 
         endTime = tick() + duration,
         damageType = damageType,
     }
-
-    self.activeEffects[enemy:GetDebugId()] = effectData
 
     -- Apply immediate effects
     if effect == "slow" then

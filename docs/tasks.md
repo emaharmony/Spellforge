@@ -10,8 +10,7 @@
 
 | ID | Phase | Task | Branch / PR | Status |
 |----|-------|------|-------------|--------|
-| SF-110 | Phase 3 | Meta persistence: run stats wire + spell recipe save/re-equip | `feat/meta-persistence` → [PR #4](https://github.com/emaharmony/Spellforge/pull/4) | 🔶 in review |
-| SF-111 | Phase 3 | Max HP upgrade (150💎 one-time, rest shop) | `feat/meta-persistence` → [PR #4](https://github.com/emaharmony/Spellforge/pull/4) | 🔶 in review |
+| SF-115 | Phase 6 | Test harness: Studio MCP smoke pipeline + 3 harness-caught fixes | `fix/datastore-playmode-fallback` → [PR #5](https://github.com/emaharmony/Spellforge/pull/5) | 🔶 in review |
 
 ### Merge order: PR #1 → #2 → #3 (each stacks on the previous)
 
@@ -21,7 +20,7 @@
 
 | ID | Phase | Task | Notes |
 |----|-------|------|-------|
-| SF-112 | Phase 3 | Playtest: persistence round-trip (rejoin restores all) | exit gate — validates PR #4 checklist + full 1–3 stack |
+| SF-112 | Phase 3 | Playtest: persistence round-trip (rejoin restores all) | exit gate — needs published place for DataStore (PT-001 smoke PASS covers the loop) |
 | SF-120 | Phase 4 | SpellFired projectile VFX client listener | one small file; color from spell |
 | SF-130 | Phase 5 | BossWarning banner on wave 10 | remote exists, never fired |
 | SF-131 | Phase 5 | First-join instruction card | "Survive 10 waves. Craft between waves. Press C." |
@@ -54,8 +53,9 @@
 | SF-101 | 2026-10-11 | PR#1 | Gameloop fix merged | 7 dead-wire bugs closed | PR #1 merged (e6f81e3) |
 | SF-102 | 2026-10-11 | Phase 1 | Run integrity merged | results screen, Play Again, restart-safe systems, kill credit | PR #2 merged (b9d3ba7) |
 | SF-103 | 2026-10-11 | Phase 2 | Economy server-truth merged | inventory gate, craft deduct, pack integrity, InventorySync | PR #3 merged (fbe0369) |
-| SF-110 | 2026-10-11 | Phase 3 | Meta persistence built | run stats wire (recordRunCompletion was dead code), spell recipe save + free rejoin re-equip, isBest unlock callout | PR #4 in review |
-| SF-111 | 2026-10-11 | Phase 3 | Max HP upgrade built | 150💎 one-time, BuyMaxHP remote, owned-state UI, failure reasons | PR #4 in review |
+| SF-110 | 2026-10-11 | Phase 3 | Meta persistence merged | run stats wire (recordRunCompletion was dead code), spell recipe save + free rejoin re-equip, isBest unlock callout | PR #4 merged (66f5edd) |
+| SF-111 | 2026-10-11 | Phase 3 | Max HP upgrade merged | 150💎 one-time, BuyMaxHP remote, owned-state UI, failure reasons | PR #4 merged (66f5edd) |
+| PT-001 | 2026-10-11 | Harness | Automated smoke test PASS via Studio MCP | core loop verified live: spawn→attack→12 kills→102💎→wave-3 defeat→results UI; 3 bugs caught+fixed (adfc10f, 1949b76, f6f4e28); evidence docs/playtest/PT-001.md + 3 captures | PR #5 |
 
 ---
 
