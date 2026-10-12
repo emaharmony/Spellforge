@@ -8,6 +8,17 @@ Config.PLATFORM_SIZE = 100
 Config.TOTAL_WAVES = 10
 Config.WAVE_REST_TIME = 15 -- seconds between waves (crafting/shop time)
 
+-- TEST_MODE: automated full-run playtests via the Studio MCP harness.
+-- Skips rest-phase waits (the harness cannot click Ready Up) and shrinks
+-- nothing else — waves, HP, damage, economy all stay production values.
+-- Production servers NEVER set this (default false).
+Config.TEST_MODE = false
+
+-- TEST_START_WAVE: when TEST_MODE is on, runs begin at this wave (default 1).
+-- Lets the harness exercise late-game paths (e.g. the wave-10 boss) without
+-- tuning difficulty or grinding 9 waves every session. Production: unused.
+Config.TEST_START_WAVE = 1
+
 -- Wizard
 Config.WIZARD_SPEED = 16
 Config.WIZARD_START_HP = 100

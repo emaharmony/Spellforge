@@ -1,4 +1,14 @@
 -- RunResultsUI.client.luau — End-of-run results screen with Play Again (Phase 1 run integrity)
+-- Idempotency guard: Roblox re-clones StarterGui scripts into PlayerGui on
+-- every character respawn; without this, a mid-run death duplicates every
+-- GUI and listener (PT-002 root cause for overlapping panels).
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+if localPlayer:GetAttribute("SF_RunResultsUILoaded") then
+	return
+end
+localPlayer:SetAttribute("SF_RunResultsUILoaded", true)
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
@@ -99,6 +109,20 @@ Remotes.GameOver.OnClientEvent:Connect(function(reason: string, stats: any)
 		return
 	end
 	stats = stats or {}
+
+	-- SF-140b: run ended — close ALL rest/crafting panels so they don't
+	-- overlap the results screen (PT-001: Wave Complete + Defeated both up).
+	-- GetAll matching instances: harness restarts can leave stale clones in
+	-- PlayerGui; a single FindFirstChild misses them.
+	local playerGui = script.Parent
+	for _, name in { "WaveRestUI", "SpellforgeCrafting" } do
+		for _, gui in playerGui:GetChildren() do
+			if gui.Name == name and gui:IsA("ScreenGui") then
+				gui.Enabled = false
+			end
+		end
+	end
+
 	local isNewBest = stats.victory == true and stats.isBest == true
 	local waveReached = tostring(stats.wave or "?")
 	if reason == "victory" then

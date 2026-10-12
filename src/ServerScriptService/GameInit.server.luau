@@ -225,6 +225,21 @@ local function startRun()
 	combatEngine:resetRun()
 	-- Fresh run = everyone at full health (survivors keep crystals/fragments)
 	for _, plr in Players:GetPlayers() do
+		-- TEST_MODE fixture also applies at run start: covers players who joined
+		-- before the flag was flipped mid-session (harness timing), and keeps
+		-- every run consistent once the flag is on.
+		if Config.TEST_MODE then
+			local crafted = SpellAssembler.assemble({
+				"fire_element",
+				"fire_shape_nova",
+				"fire_power_supernova",
+				"fire_mod_split",
+			})
+			if crafted and waveSystem.players[plr.UserId] then
+				waveSystem.players[plr.UserId].spell = crafted
+				plr:SetAttribute("EquippedSpell", crafted.id)
+			end
+		end
 		local maxHP = plr:GetAttribute("MaxHP") or 100
 		plr:SetAttribute("HP", maxHP)
 		local humanoid = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
@@ -269,6 +284,20 @@ local function onPlayerAdded(player: Player)
 	end
 	if not equippedSpell then
 		equippedSpell = SpellAssembler.createStarterSpell()
+	end
+	if Config.TEST_MODE then
+		-- Test fixture: a rare-power crafted spell via the REAL recipe pipeline
+		-- (assemble, not attribute injection). Models a player who crafted
+		-- between waves — production never runs this branch.
+		local crafted = SpellAssembler.assemble({
+			"fire_element",
+			"fire_shape_nova",
+			"fire_power_supernova",
+			"fire_mod_split",
+		})
+		if crafted then
+			equippedSpell = crafted
+		end
 	end
 	if equippedSpell then
 		player:SetAttribute("EquippedSpell", equippedSpell.id)
@@ -323,9 +352,22 @@ local function onPlayerAdded(player: Player)
 		staff.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(1.5, 0, 0)
 	end
 
-	player.CharacterAdded:Connect(onCharacterAdded)
+	-- SF-140a: respawn guarantee. Roblox respawns at SpawnLocation which drifts
+	-- (PT-001 saw -9,-9); explicitly place every character on the spawn pad.
+	local function placeOnPlatform(character: Model)
+		local hrp = character:WaitForChild("HumanoidRootPart", 5)
+		if hrp then
+			hrp.CFrame = CFrame.new(0, 3, 0)
+		end
+	end
+
+	player.CharacterAdded:Connect(function(character)
+		onCharacterAdded(character)
+		placeOnPlatform(character)
+	end)
 	if player.Character then
 		onCharacterAdded(player.Character)
+		placeOnPlatform(player.Character)
 	end
 
 	-- Handle heal request
@@ -397,6 +439,44 @@ local function onPlayerAdded(player: Player)
 		coopManager:setPlayerElement(player, spell.element)
 	end)
 end
+
+-- TEST_MODE watcher: the harness flips Config.TEST_MODE mid-session (after join,
+-- possibly after run start). When it flips, apply the crafted-spell fixture to
+-- all registered players once — the attack loop reads .spell each tick, so the
+-- swap takes effect on the next cast without touching live state otherwise.
+task.spawn(function()
+	while true do
+		if Config.TEST_MODE and not testStimApplied then
+			local grantedAny = false
+			for _, plr in Players:GetPlayers() do
+				local pd = waveSystem.players[plr.UserId]
+				if pd then
+					testStimApplied = true -- latch only on a real grant
+					grantedAny = true
+					local crafted = SpellAssembler.assemble({
+						"fire_element",
+						"fire_shape_nova",
+						"fire_power_supernova",
+						"fire_mod_split",
+					})
+					if crafted then
+						pd.spell = crafted
+						plr:SetAttribute("EquippedSpell", crafted.id)
+					end
+					-- Model a returning player who cleared once: Max HP 120
+					-- (the Phase 3 first-clear unlock), refilled.
+					plr:SetAttribute("MaxHP", 120)
+					plr:SetAttribute("HP", 120)
+					Remotes.UpdateHUD:FireClient(plr, { hp = 120, maxHP = 120 })
+				end
+			end
+			if grantedAny then
+				print("[Spellforge] TEST_MODE fixture applied (veteran kit)")
+			end
+		end
+		task.wait(1)
+	end
+end)
 
 -- Handle player removal
 Players.PlayerRemoving:Connect(function(player)

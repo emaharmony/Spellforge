@@ -11,7 +11,13 @@
 | ID | Phase | Task | Branch / PR | Status |
 |----|-------|------|-------------|--------|
 | SF-115 | Phase 6 | Test harness: Studio MCP smoke pipeline + 3 harness-caught fixes | `fix/datastore-playmode-fallback` → [PR #5](https://github.com/emaharmony/Spellforge/pull/5) | 🔶 in review |
-| SF-120 | Phase 4 | SpellFired VFX: streak + impact burst, element-colored | `feat/spell-vfx` → [PR #6](https://github.com/emaharmony/Spellforge/pull/6) | 🔶 in review |
+| SF-120 | Phase 4 | SpellFired VFX: streak + impact burst, element-colored | `feat/spell-vfx` → [PR #6](https://github.com/emaharmony/Spellforge/pull/6) | ✅ merged |
+| SF-130 | Phase 5 | BossWarning fired on wave-10 boss spawn + banner client | `feat/onboarding-glue` → [PR #7](https://github.com/emaharmony/Spellforge/pull/7) | 🔶 in review |
+| SF-131 | Phase 5 | First-join instruction card (auto-dismiss on wave 1 clear) | `feat/onboarding-glue` → [PR #7](https://github.com/emaharmony/Spellforge/pull/7) | 🔶 in review |
+| SF-132 | Phase 5 | C keybind → crafting UI toggle (in SpellforgeUI itself) | `feat/onboarding-glue` → [PR #7](https://github.com/emaharmony/Spellforge/pull/7) | 🔶 in review |
+| SF-140 | Phase 6 | TEST_MODE/TEST_START_WAVE harness fixtures + PT-002 lifecycle gate | `balance/playtest` → [PR #8](https://github.com/emaharmony/Spellforge/pull/8) | 🔶 in review |
+| SF-141 | Phase 6 | Boss + victory path validation (Amber Colossus, wave-10 flow) | `balance/playtest` → [PR #8](https://github.com/emaharmony/Spellforge/pull/8) | 🔶 in review |
+| SF-142 | Phase 6 | Kill-credit fix: Rarity attribute + boss tier bounty | `balance/playtest` → [PR #8](https://github.com/emaharmony/Spellforge/pull/8) | 🔶 in review |
 
 ### Merge order: PR #1 → #2 → #3 (each stacks on the previous)
 

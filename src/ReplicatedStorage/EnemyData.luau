@@ -92,7 +92,7 @@ EnemyData.Types = {
 		attackRange = Config.BOSS.stomp_range,
 		attackCooldown = Config.BOSS.stomp_cooldown,
 		crystalDrop = Config.BOSS.crystal_reward,
-		rarity = "epic",
+		rarity = "boss", -- CRYSTAL_PER_KILL tier: boss = 50 (the Colossus bounty)
 		color = Config.BOSS.color,
 		size = Config.BOSS.size,
 		isBoss = true,

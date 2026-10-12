@@ -66,7 +66,9 @@ end
 function WaveSystem:start()
 	if self.gameActive then return end
 	self.gameActive = true
-	self.currentWave = 0
+	-- TEST_MODE can begin mid-sequence (harness: exercise wave 10 boss path
+	-- without grinding). Production always starts at wave 1.
+	self.currentWave = (Config.TEST_MODE and Config.TEST_START_WAVE or 1) - 1
 	self.runStats = { kills = 0, crystalsEarned = 0, startedAt = tick() }
 
 	-- Reset systems
@@ -126,7 +128,12 @@ function WaveSystem:getCombatState(player: Player): boolean
 end
 
 function WaveSystem:runWaves()
-	for wave = 1, self.maxWaves do
+	-- TEST_START_WAVE: skip-ahead for harness boss validation (only via TEST_MODE)
+	local startWave = 1
+	if Config.TEST_MODE and Config.TEST_START_WAVE then
+		startWave = math.clamp(Config.TEST_START_WAVE, 1, self.maxWaves)
+	end
+	for wave = startWave, self.maxWaves do
 		if not self.gameActive then return end -- defeated/rested mid-run; don't keep firing waves
 		self.currentWave = wave
 		local composition = Config.WAVE_COMPOSITION[wave]
@@ -188,7 +195,13 @@ function WaveSystem:runWaves()
 			end
 		end
 
-		-- Notify wave complete
+		-- Notify wave complete — but never past a run-level end: the death
+		-- path fires GameOut-of-band; a WaveComplete/restPhase landing after
+		-- it re-opens panels over the results screen (PT-003 race).
+		if not self.gameActive then
+			return
+		end
+
 		Remotes.WaveComplete:FireAllClients(wave, composition.description)
 
 		-- Rest phase (crafting, shop, ready-up)
@@ -266,7 +279,11 @@ end
 
 function WaveSystem:spawnWave(composition: any)
 	if composition.isBoss then
-		-- Boss wave
+		-- Boss wave — warn clients BEFORE the spawn (SF-130: remote existed, never fired)
+		Remotes.BossWarning:FireAllClients({
+			name = "Amber Colossus",
+			wave = self.currentWave,
+		})
 		self.enemySpawner:spawnEnemy("boss", Vector3.new(0, 5, -30))
 	else
 		-- Regular wave — spawn from edges
@@ -315,7 +332,7 @@ end
 function WaveSystem:restPhase(completedWave: number)
 	self.readyPlayers = {}
 
-	local restEndTime = tick() + Config.WAVE_REST_TIME
+	local restEndTime = tick() + (Config.TEST_MODE and 0.5 or Config.WAVE_REST_TIME)
 	Remotes.UpdateHUD:FireAllClients({
 		restPhase = true,
 		restTime = Config.WAVE_REST_TIME,

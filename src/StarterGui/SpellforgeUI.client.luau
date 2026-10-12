@@ -1,6 +1,16 @@
 -- SpellforgeUI.client.luau — Spell crafting UI with drag-and-drop fragments
 -- Phase 2: Full crafting screen, fragment inventory, spell assembly
 
+-- Idempotency guard: Roblox re-clones StarterGui scripts into PlayerGui on
+-- every character respawn; without this, a mid-run death duplicates every
+-- GUI and listener (PT-002 root cause for overlapping panels).
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+if localPlayer:GetAttribute("SF_SpellforgeUILoaded") then
+	return
+end
+localPlayer:SetAttribute("SF_SpellforgeUILoaded", true)
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -743,5 +753,15 @@ end)
 -- (RestPhase intentionally does NOT auto-open crafting here — the rest
 -- panel with shop + ready-up stays on top; its "Open Spellforge" button
 -- opens crafting explicitly.)
+
+-- SF-132: crafting keybind — C toggles the forge. gameProcessed guard
+-- means typing in chat (or any text field) never triggers it.
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.C then
+		SpellforgeUI.toggle()
+	end
+end)
 
 return SpellforgeUI
